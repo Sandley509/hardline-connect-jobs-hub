@@ -11,6 +11,7 @@ import Contact from "./pages/Contact";
 import AdminLinks from "./pages/AdminLinks";
 import Checkout from "./pages/Checkout";
 import Shop from "./pages/Shop";
+import Services from "./pages/Services";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/admin" element={<AdminLinks />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/shop" element={<Shop />} />
+            <Route path="/services" element={<Services />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

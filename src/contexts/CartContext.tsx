@@ -6,7 +6,7 @@ export interface CartItem {
   name: string;
   price: number;
   image: string;
-  category: 'headset' | 'router';
+  category: 'headset' | 'router' | 'service';
   quantity: number;
 }
 

@@ -15,6 +15,7 @@ const CartModal = ({ isOpen, onClose, onCheckout }: CartModalProps) => {
   const { items, updateQuantity, removeItem, getTotalPrice } = useCart();
 
   const handleCheckout = () => {
+    console.log('Checkout button clicked, redirecting...');
     onClose();
     onCheckout();
   };
@@ -38,6 +39,7 @@ const CartModal = ({ isOpen, onClose, onCheckout }: CartModalProps) => {
                 <div className="flex-1">
                   <h4 className="font-medium">{item.name}</h4>
                   <p className="text-green-600 font-bold">${item.price.toFixed(2)}</p>
+                  <p className="text-xs text-gray-500 capitalize">{item.category}</p>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Button

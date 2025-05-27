@@ -29,6 +29,12 @@ const Layout = ({ children }: LayoutProps) => {
               <Link to="/ip-pricing" className="text-gray-700 hover:text-blue-600 transition-colors">
                 IP Servers
               </Link>
+              <Link to="/shop" className="text-gray-700 hover:text-blue-600 transition-colors">
+                Shop
+              </Link>
+              <Link to="/services" className="text-gray-700 hover:text-blue-600 transition-colors">
+                Services
+              </Link>
               <Link to="/contact" className="text-gray-700 hover:text-blue-600 transition-colors">
                 Contact
               </Link>
@@ -63,6 +69,20 @@ const Layout = ({ children }: LayoutProps) => {
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   IP Servers
+                </Link>
+                <Link 
+                  to="/shop" 
+                  className="text-gray-700 hover:text-blue-600 transition-colors py-2"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Shop
+                </Link>
+                <Link 
+                  to="/services" 
+                  className="text-gray-700 hover:text-blue-600 transition-colors py-2"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Services
                 </Link>
                 <Link 
                   to="/contact" 
