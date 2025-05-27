@@ -1,11 +1,20 @@
-
 import Layout from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Server, Shield, Zap, Globe, Monitor, Headphones, Router } from "lucide-react";
+import { Server, Shield, Zap, Globe, Monitor, Headphones, Router, ShoppingCart } from "lucide-react";
+import { useState } from "react";
+import { useCart } from "@/contexts/CartContext";
+import CartIcon from "@/components/CartIcon";
+import CartModal from "@/components/CartModal";
+import { useNavigate } from "react-router-dom";
+import { toast } from "@/components/ui/use-toast";
 
 const IPPricing = () => {
+  const [showCart, setShowCart] = useState(false);
+  const { addItem } = useCart();
+  const navigate = useNavigate();
+
   const ipPricingPlans = [
     {
       name: "Basic IP",
@@ -118,20 +127,23 @@ const IPPricing = () => {
 
   const headsets = [
     {
+      id: "headset-1",
       name: "Professional Headset Pro",
-      price: "$89.99",
+      price: 89.99,
       image: "/placeholder.svg",
       features: ["Noise Cancellation", "USB Connection", "Comfortable Padding", "Adjustable Microphone"]
     },
     {
+      id: "headset-2",
       name: "Call Center Elite",
-      price: "$129.99",
+      price: 129.99,
       image: "/placeholder.svg",
       features: ["Superior Audio Quality", "All-Day Comfort", "Quick Disconnect", "Warranty Included"]
     },
     {
+      id: "headset-3",
       name: "Remote Work Essential",
-      price: "$59.99",
+      price: 59.99,
       image: "/placeholder.svg",
       features: ["Crystal Clear Audio", "Lightweight Design", "Plug & Play", "Compatible with All Devices"]
     }
@@ -139,27 +151,60 @@ const IPPricing = () => {
 
   const routers = [
     {
+      id: "router-1",
       name: "GL.iNet GL-MT300N-V2",
-      price: "$29.99",
+      price: 29.99,
       image: "/placeholder.svg",
       features: ["Mini Travel Router", "OpenWrt Pre-installed", "300Mbps WiFi", "Portable Design"]
     },
     {
+      id: "router-2",
       name: "GL.iNet GL-AXT1800",
-      price: "$89.99",
+      price: 89.99,
       image: "/placeholder.svg",
       features: ["WiFi 6 Router", "1800Mbps Speed", "VPN Client & Server", "Gigabit Ports"]
     },
     {
+      id: "router-3",
       name: "GL.iNet GL-MT1300",
-      price: "$69.99",
+      price: 69.99,
       image: "/placeholder.svg",
       features: ["Beryl Travel Router", "AC1300 WiFi", "VPN Ready", "Compact Design"]
     }
   ];
 
+  const handleAddToCart = (item: any, category: 'headset' | 'router') => {
+    addItem({
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      image: item.image,
+      category
+    });
+    toast({
+      title: "Added to Cart",
+      description: `${item.name} has been added to your cart.`,
+    });
+  };
+
+  const handleCheckout = () => {
+    navigate('/checkout');
+  };
+
   return (
     <Layout>
+      {/* Fixed Cart Icon */}
+      <div className="fixed top-20 right-4 z-50">
+        <CartIcon onClick={() => setShowCart(true)} />
+      </div>
+
+      {/* Cart Modal */}
+      <CartModal
+        isOpen={showCart}
+        onClose={() => setShowCart(false)}
+        onCheckout={handleCheckout}
+      />
+
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-indigo-600 to-blue-600 text-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -290,7 +335,7 @@ const IPPricing = () => {
                     <img src={headset.image} alt={headset.name} className="w-full h-48 object-cover rounded-lg mb-4" />
                     <CardTitle className="text-lg">{headset.name}</CardTitle>
                     <CardDescription>
-                      <span className="text-2xl font-bold text-green-600">{headset.price}</span>
+                      <span className="text-2xl font-bold text-green-600">${headset.price}</span>
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -302,7 +347,13 @@ const IPPricing = () => {
                         </li>
                       ))}
                     </ul>
-                    <Button className="w-full">Add to Cart</Button>
+                    <Button 
+                      className="w-full" 
+                      onClick={() => handleAddToCart(headset, 'headset')}
+                    >
+                      <ShoppingCart className="h-4 w-4 mr-2" />
+                      Add to Cart
+                    </Button>
                   </CardContent>
                 </Card>
               ))}
@@ -322,7 +373,7 @@ const IPPricing = () => {
                     <img src={router.image} alt={router.name} className="w-full h-48 object-cover rounded-lg mb-4" />
                     <CardTitle className="text-lg">{router.name}</CardTitle>
                     <CardDescription>
-                      <span className="text-2xl font-bold text-green-600">{router.price}</span>
+                      <span className="text-2xl font-bold text-green-600">${router.price}</span>
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -334,7 +385,13 @@ const IPPricing = () => {
                         </li>
                       ))}
                     </ul>
-                    <Button className="w-full">Add to Cart</Button>
+                    <Button 
+                      className="w-full"
+                      onClick={() => handleAddToCart(router, 'router')}
+                    >
+                      <ShoppingCart className="h-4 w-4 mr-2" />
+                      Add to Cart
+                    </Button>
                   </CardContent>
                 </Card>
               ))}
