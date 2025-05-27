@@ -10,6 +10,7 @@ import IPPricing from "./pages/IPPricing";
 import Contact from "./pages/Contact";
 import AdminLinks from "./pages/AdminLinks";
 import Checkout from "./pages/Checkout";
+import Shop from "./pages/Shop";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/contact" element={<Contact />} />
             <Route path="/admin" element={<AdminLinks />} />
             <Route path="/checkout" element={<Checkout />} />
+            <Route path="/shop" element={<Shop />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

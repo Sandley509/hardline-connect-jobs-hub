@@ -2,17 +2,16 @@ import Layout from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Server, Shield, Zap, Globe, Monitor, Headphones, Router, ShoppingCart } from "lucide-react";
+import { Server, Shield, Zap, Globe, Monitor, ShoppingCart } from "lucide-react";
 import { useState } from "react";
 import { useCart } from "@/contexts/CartContext";
 import CartIcon from "@/components/CartIcon";
 import CartModal from "@/components/CartModal";
 import { useNavigate } from "react-router-dom";
-import { toast } from "@/components/ui/use-toast";
 
 const IPPricing = () => {
   const [showCart, setShowCart] = useState(false);
-  const { addItem } = useCart();
+  const { getTotalItems } = useCart();
   const navigate = useNavigate();
 
   const ipPricingPlans = [
@@ -124,68 +123,6 @@ const IPPricing = () => {
       ]
     }
   ];
-
-  const headsets = [
-    {
-      id: "headset-1",
-      name: "Professional Headset Pro",
-      price: 89.99,
-      image: "/placeholder.svg",
-      features: ["Noise Cancellation", "USB Connection", "Comfortable Padding", "Adjustable Microphone"]
-    },
-    {
-      id: "headset-2",
-      name: "Call Center Elite",
-      price: 129.99,
-      image: "/placeholder.svg",
-      features: ["Superior Audio Quality", "All-Day Comfort", "Quick Disconnect", "Warranty Included"]
-    },
-    {
-      id: "headset-3",
-      name: "Remote Work Essential",
-      price: 59.99,
-      image: "/placeholder.svg",
-      features: ["Crystal Clear Audio", "Lightweight Design", "Plug & Play", "Compatible with All Devices"]
-    }
-  ];
-
-  const routers = [
-    {
-      id: "router-1",
-      name: "GL.iNet GL-MT300N-V2",
-      price: 29.99,
-      image: "/placeholder.svg",
-      features: ["Mini Travel Router", "OpenWrt Pre-installed", "300Mbps WiFi", "Portable Design"]
-    },
-    {
-      id: "router-2",
-      name: "GL.iNet GL-AXT1800",
-      price: 89.99,
-      image: "/placeholder.svg",
-      features: ["WiFi 6 Router", "1800Mbps Speed", "VPN Client & Server", "Gigabit Ports"]
-    },
-    {
-      id: "router-3",
-      name: "GL.iNet GL-MT1300",
-      price: 69.99,
-      image: "/placeholder.svg",
-      features: ["Beryl Travel Router", "AC1300 WiFi", "VPN Ready", "Compact Design"]
-    }
-  ];
-
-  const handleAddToCart = (item: any, category: 'headset' | 'router') => {
-    addItem({
-      id: item.id,
-      name: item.name,
-      price: item.price,
-      image: item.image,
-      category
-    });
-    toast({
-      title: "Added to Cart",
-      description: `${item.name} has been added to your cart.`,
-    });
-  };
 
   const handleCheckout = () => {
     navigate('/checkout');
@@ -311,92 +248,26 @@ const IPPricing = () => {
           </div>
         </div>
 
-        {/* Mini Marketplace Section */}
+        {/* Equipment Store CTA */}
         <div className="mb-20">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">
-              Essential Equipment Store
-            </h2>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Professional headsets and reliable routers for your remote work setup.
-            </p>
-          </div>
-
-          {/* Headsets */}
-          <div className="mb-12">
-            <h3 className="text-2xl font-bold text-gray-800 mb-8 flex items-center">
-              <Headphones className="h-8 w-8 mr-3 text-blue-600" />
-              Professional Headsets
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {headsets.map((headset, index) => (
-                <Card key={index} className="hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <img src={headset.image} alt={headset.name} className="w-full h-48 object-cover rounded-lg mb-4" />
-                    <CardTitle className="text-lg">{headset.name}</CardTitle>
-                    <CardDescription>
-                      <span className="text-2xl font-bold text-green-600">${headset.price}</span>
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-2 mb-6">
-                      {headset.features.map((feature, featureIndex) => (
-                        <li key={featureIndex} className="flex items-start">
-                          <div className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                          <span className="text-gray-700 text-sm">{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <Button 
-                      className="w-full" 
-                      onClick={() => handleAddToCart(headset, 'headset')}
-                    >
-                      <ShoppingCart className="h-4 w-4 mr-2" />
-                      Add to Cart
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-
-          {/* Routers */}
-          <div>
-            <h3 className="text-2xl font-bold text-gray-800 mb-8 flex items-center">
-              <Router className="h-8 w-8 mr-3 text-blue-600" />
-              GL.iNet Routers
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {routers.map((router, index) => (
-                <Card key={index} className="hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <img src={router.image} alt={router.name} className="w-full h-48 object-cover rounded-lg mb-4" />
-                    <CardTitle className="text-lg">{router.name}</CardTitle>
-                    <CardDescription>
-                      <span className="text-2xl font-bold text-green-600">${router.price}</span>
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-2 mb-6">
-                      {router.features.map((feature, featureIndex) => (
-                        <li key={featureIndex} className="flex items-start">
-                          <div className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                          <span className="text-gray-700 text-sm">{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <Button 
-                      className="w-full"
-                      onClick={() => handleAddToCart(router, 'router')}
-                    >
-                      <ShoppingCart className="h-4 w-4 mr-2" />
-                      Add to Cart
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
+          <Card className="bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
+            <CardContent className="p-8 text-center">
+              <ShoppingCart className="h-16 w-16 mx-auto text-purple-600 mb-4" />
+              <h3 className="text-2xl font-bold text-gray-800 mb-4">
+                Complete Your Remote Setup
+              </h3>
+              <p className="text-lg text-gray-600 mb-6">
+                Professional headsets and reliable GL.iNet routers for your remote work needs
+              </p>
+              <Button 
+                size="lg" 
+                onClick={() => navigate('/shop')}
+                className="bg-purple-600 hover:bg-purple-700"
+              >
+                Visit Equipment Store
+              </Button>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Additional Info */}
