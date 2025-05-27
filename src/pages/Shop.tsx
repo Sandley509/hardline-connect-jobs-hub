@@ -18,17 +18,17 @@ const Shop = () => {
   const headsets = [
     {
       id: "headset-1",
-      name: "Professional Headset Pro",
+      name: "Logitech Usb headset",
       price: 89.99,
-      image: "/placeholder.svg",
+      image: "/logitech.webp",
       stripeProductId: "prod_headset_pro_123", // Replace with real Stripe product ID
       features: ["Noise Cancellation", "USB Connection", "Comfortable Padding", "Adjustable Microphone"]
     },
     {
-      id: "headset-2",
-      name: "Call Center Elite",
+      id: "headsert-2",
+      name: "Jabara usb headset",
       price: 129.99,
-      image: "/placeholder.svg",
+      image: "/jabra.jpg",
       stripeProductId: "prod_headset_elite_456", // Replace with real Stripe product ID
       features: ["Superior Audio Quality", "All-Day Comfort", "Quick Disconnect", "Warranty Included"]
     },
@@ -47,7 +47,7 @@ const Shop = () => {
       id: "router-1",
       name: "GL.iNet GL-MT300N-V2",
       price: 29.99,
-      image: "/placeholder.svg",
+      image: "/glinetmt300.webp",
       stripeProductId: "prod_router_mt300_123", // Replace with real Stripe product ID
       features: ["Mini Travel Router", "OpenWrt Pre-installed", "300Mbps WiFi", "Portable Design"]
     },
@@ -55,7 +55,7 @@ const Shop = () => {
       id: "router-2",
       name: "GL.iNet GL-AXT1800",
       price: 89.99,
-      image: "/placeholder.svg",
+      image: "/glinetaxt.webp",
       stripeProductId: "prod_router_axt1800_456", // Replace with real Stripe product ID
       features: ["WiFi 6 Router", "1800Mbps Speed", "VPN Client & Server", "Gigabit Ports"]
     },
@@ -63,7 +63,7 @@ const Shop = () => {
       id: "router-3",
       name: "GL.iNet GL-MT1300",
       price: 69.99,
-      image: "/placeholder.svg",
+      image: "/mt1300.jpg",
       stripeProductId: "prod_router_mt1300_789", // Replace with real Stripe product ID
       features: ["Beryl Travel Router", "AC1300 WiFi", "VPN Ready", "Compact Design"]
     }
@@ -124,7 +124,7 @@ const Shop = () => {
             {headsets.map((headset, index) => (
               <Card key={index} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
-                  <img src={headset.image} alt={headset.name} className="w-full h-48 object-cover rounded-lg mb-4" />
+                  <img src={headset.image} alt={headset.name} className="w-full h-58 object-cover rounded-lg mb-4" />
                   <CardTitle className="text-lg">{headset.name}</CardTitle>
                   <div className="text-2xl font-bold text-green-600">${headset.price}</div>
                 </CardHeader>
