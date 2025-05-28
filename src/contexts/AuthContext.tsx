@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
@@ -115,13 +114,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) {
         console.error('Login error:', error);
-        return false;
+        
+        // Re-throw the error with more specific information for email confirmation issues
+        if (error.message?.includes('Email not confirmed') || error.message?.includes('email_not_confirmed')) {
+          const enhancedError = new Error('Email not confirmed');
+          enhancedError.code = 'email_not_confirmed';
+          throw enhancedError;
+        }
+        
+        throw error;
       }
 
       return !!data.user;
     } catch (error) {
       console.error('Login error:', error);
-      return false;
+      throw error; // Re-throw so the component can handle it
     }
   };
 

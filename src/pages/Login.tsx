@@ -3,23 +3,26 @@ import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
-import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail, AlertCircle } from "lucide-react";
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [emailNotConfirmed, setEmailNotConfirmed] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setEmailNotConfirmed(false);
 
     try {
       const success = await login(email, password);
@@ -36,12 +39,26 @@ const Login = () => {
           variant: "destructive",
         });
       }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "An error occurred during login. Please try again.",
-        variant: "destructive",
-      });
+    } catch (error: any) {
+      console.log('Login error:', error);
+      
+      // Check if the error is related to email not being confirmed
+      if (error?.message?.includes('Email not confirmed') || 
+          error?.code === 'email_not_confirmed' ||
+          (typeof error === 'object' && error?.error === 'email_not_confirmed')) {
+        setEmailNotConfirmed(true);
+        toast({
+          title: "Email Not Confirmed",
+          description: "Please check your email and click the confirmation link before logging in.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "An error occurred during login. Please try again.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -66,6 +83,16 @@ const Login = () => {
           </div>
 
           <div className="bg-white rounded-xl shadow-lg p-8">
+            {emailNotConfirmed && (
+              <Alert className="mb-6 border-orange-200 bg-orange-50">
+                <AlertCircle className="h-4 w-4 text-orange-600" />
+                <AlertDescription className="text-orange-800">
+                  <strong>Email confirmation required!</strong> Please check your email inbox and click the confirmation link before trying to log in. 
+                  Don't forget to check your spam folder. Once confirmed, you can return here to log in.
+                </AlertDescription>
+              </Alert>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <Label htmlFor="email" className="text-gray-700 font-medium">
