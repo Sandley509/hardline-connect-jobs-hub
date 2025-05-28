@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
-import { Search, Ban, CheckCircle, AlertTriangle } from "lucide-react";
+import { Search, Ban, CheckCircle, AlertTriangle, Package } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface UserProfile {
@@ -16,6 +16,8 @@ interface UserProfile {
   created_at: string;
   is_blocked?: boolean;
   blocked_reason?: string;
+  order_count?: number;
+  total_spent?: number;
 }
 
 const AdminUsers = () => {
@@ -26,7 +28,7 @@ const AdminUsers = () => {
   const { data: users, isLoading } = useQuery({
     queryKey: ['admin-users'],
     queryFn: async () => {
-      // Get profiles data
+      // Get profiles with order statistics
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
@@ -34,7 +36,7 @@ const AdminUsers = () => {
 
       if (profilesError) throw profilesError;
 
-      // For each profile, get user status and email from other sources
+      // For each profile, get user status and order statistics
       const usersWithStatus = await Promise.all(
         (profiles || []).map(async (profile) => {
           // Get user status
@@ -44,11 +46,22 @@ const AdminUsers = () => {
             .eq('user_id', profile.id)
             .single();
 
+          // Get order statistics
+          const { data: orderStats } = await supabase
+            .from('orders')
+            .select('total_amount')
+            .eq('user_id', profile.id);
+
+          const orderCount = orderStats?.length || 0;
+          const totalSpent = orderStats?.reduce((sum, order) => sum + parseFloat(order.total_amount.toString()), 0) || 0;
+
           return {
             ...profile,
-            email: `user-${profile.id.slice(0, 8)}@example.com`, // Placeholder since we can't access auth.users from client
+            email: `user-${profile.id.slice(0, 8)}@example.com`,
             is_blocked: status?.is_blocked || false,
-            blocked_reason: status?.blocked_reason
+            blocked_reason: status?.blocked_reason,
+            order_count: orderCount,
+            total_spent: totalSpent
           };
         })
       );
@@ -75,7 +88,7 @@ const AdminUsers = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       toast({
         title: "User blocked successfully",
-        description: "The user has been blocked from accessing the platform.",
+        description: "The user has been blocked and their access has been removed.",
       });
     },
     onError: (error) => {
@@ -152,6 +165,8 @@ const AdminUsers = () => {
                   <tr className="border-b border-gray-200">
                     <th className="text-left py-3 px-4 font-medium text-gray-900">User</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-900">Email</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900">Orders</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900">Total Spent</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-900">Joined</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-900">Status</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-900">Actions</th>
@@ -171,6 +186,17 @@ const AdminUsers = () => {
                         </div>
                       </td>
                       <td className="py-3 px-4 text-gray-600">{user.email}</td>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center">
+                          <Package className="h-4 w-4 text-gray-400 mr-1" />
+                          <span className="text-gray-900">{user.order_count}</span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className="font-medium text-gray-900">
+                          ${user.total_spent?.toFixed(2) || '0.00'}
+                        </span>
+                      </td>
                       <td className="py-3 px-4 text-gray-600">
                         {new Date(user.created_at).toLocaleDateString()}
                       </td>
