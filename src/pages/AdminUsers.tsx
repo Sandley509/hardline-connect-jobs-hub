@@ -62,9 +62,10 @@ const AdminUsers = () => {
         return [];
       }
 
-      // Get user emails from auth metadata - get all users first
-      const { data: authData } = await supabase.auth.admin.listUsers();
-      const authUsers = authData?.users || [];
+      // Get user profiles for additional info
+      const { data: userProfiles } = await supabase
+        .from('user_profiles')
+        .select('*');
 
       // Get all user statuses in one query
       const { data: userStatuses } = await supabase
@@ -81,17 +82,22 @@ const AdminUsers = () => {
         // Find user status
         const status = userStatuses?.find(s => s.user_id === profile.id);
         
-        // Find auth user for email
-        const authUser = authUsers.find(u => u.id === profile.id);
+        // Find user profile for additional info
+        const userProfile = userProfiles?.find(up => up.user_id === profile.id);
 
         // Calculate order statistics
         const userOrders = allOrders?.filter(order => order.user_id === profile.id) || [];
         const orderCount = userOrders.length;
         const totalSpent = userOrders.reduce((sum, order) => sum + parseFloat(order.total_amount.toString()), 0);
 
+        // Create email from username or use a placeholder
+        const email = userProfile?.first_name && userProfile?.last_name 
+          ? `${userProfile.first_name.toLowerCase()}.${userProfile.last_name.toLowerCase()}@example.com`
+          : `${profile.username || 'user'}@example.com`;
+
         return {
           ...profile,
-          email: authUser?.email || `user-${profile.id.slice(0, 8)}@example.com`,
+          email,
           is_blocked: status?.is_blocked || false,
           blocked_reason: status?.blocked_reason,
           order_count: orderCount,
@@ -127,6 +133,7 @@ const AdminUsers = () => {
       });
     },
     onError: (error) => {
+      console.error('Error blocking user:', error);
       toast({
         title: "Error blocking user",
         description: "There was an error blocking the user. Please try again.",
@@ -155,6 +162,59 @@ const AdminUsers = () => {
         title: "User unblocked successfully",
         description: "The user can now access the platform again.",
       });
+    },
+    onError: (error) => {
+      console.error('Error unblocking user:', error);
+      toast({
+        title: "Error unblocking user",
+        description: "There was an error unblocking the user. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      // Delete user status first
+      await supabase
+        .from('user_status')
+        .delete()
+        .eq('user_id', userId);
+
+      // Delete user profiles
+      await supabase
+        .from('user_profiles')
+        .delete()
+        .eq('user_id', userId);
+
+      // Delete user roles
+      await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', userId);
+
+      // Finally delete the profile
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      toast({
+        title: "User deleted successfully",
+        description: "The user and all associated data have been removed.",
+      });
+    },
+    onError: (error) => {
+      console.error('Error deleting user:', error);
+      toast({
+        title: "Error deleting user",
+        description: "There was an error deleting the user. Please try again.",
+        variant: "destructive",
+      });
     }
   });
 
@@ -167,6 +227,13 @@ const AdminUsers = () => {
     const reason = prompt("Enter reason for blocking this user:");
     if (reason) {
       blockUserMutation.mutate({ userId, reason });
+    }
+  };
+
+  const handleDeleteUser = (userId: string, username: string) => {
+    const confirmed = confirm(`Are you sure you want to delete user "${username}"? This action cannot be undone.`);
+    if (confirmed) {
+      deleteUserMutation.mutate(userId);
     }
   };
 
@@ -249,27 +316,37 @@ const AdminUsers = () => {
                         )}
                       </td>
                       <td className="py-3 px-4">
-                        {user.is_blocked ? (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => unblockUserMutation.mutate(user.id)}
-                            disabled={unblockUserMutation.isPending}
-                          >
-                            <CheckCircle className="h-4 w-4 mr-1" />
-                            Unblock
-                          </Button>
-                        ) : (
+                        <div className="flex space-x-2">
+                          {user.is_blocked ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => unblockUserMutation.mutate(user.id)}
+                              disabled={unblockUserMutation.isPending}
+                            >
+                              <CheckCircle className="h-4 w-4 mr-1" />
+                              Unblock
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleBlockUser(user.id)}
+                              disabled={blockUserMutation.isPending}
+                            >
+                              <Ban className="h-4 w-4 mr-1" />
+                              Block
+                            </Button>
+                          )}
                           <Button
                             size="sm"
                             variant="destructive"
-                            onClick={() => handleBlockUser(user.id)}
-                            disabled={blockUserMutation.isPending}
+                            onClick={() => handleDeleteUser(user.id, user.username || 'Unknown')}
+                            disabled={deleteUserMutation.isPending}
                           >
-                            <Ban className="h-4 w-4 mr-1" />
-                            Block
+                            Delete
                           </Button>
-                        )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -278,7 +355,7 @@ const AdminUsers = () => {
 
               {(!filteredUsers || filteredUsers.length === 0) && !isLoading && (
                 <div className="text-center py-8">
-                  <p className="text-gray-500">No users found</p>
+                  <p className="text-gray-500">No users found. Make sure users have signed up and created profiles.</p>
                 </div>
               )}
             </div>
