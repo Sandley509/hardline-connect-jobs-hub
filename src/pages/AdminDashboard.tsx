@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { Users, Briefcase, Bell, Shield, Package } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ActiveUsersList from "@/components/admin/ActiveUsersList";
+import ProductManager from "@/components/admin/ProductManager";
 
 const AdminDashboard = () => {
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
@@ -165,8 +166,11 @@ const AdminDashboard = () => {
           })}
         </div>
 
-        {/* Dashboard Content - Updated layout to include Active Users */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Product Management Section */}
+        <ProductManager />
+
+        {/* Dashboard Content */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Recent Orders */}
           <Card className="p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Orders</h3>
@@ -197,7 +201,7 @@ const AdminDashboard = () => {
             </div>
           </Card>
 
-          {/* Active Users - NEW SECTION */}
+          {/* Active Users */}
           <ActiveUsersList />
 
           {/* System Status */}
@@ -222,22 +226,6 @@ const AdminDashboard = () => {
                   Working
                 </span>
               </div>
-            </div>
-          </Card>
-
-          {/* Quick Actions */}
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-            <div className="space-y-3">
-              <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
-                Send Notification to All Users
-              </button>
-              <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
-                Export Order Data
-              </button>
-              <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
-                View System Logs
-              </button>
             </div>
           </Card>
         </div>
