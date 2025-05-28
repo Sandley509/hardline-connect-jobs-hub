@@ -1,4 +1,3 @@
-
 import AdminLayout from "@/components/AdminLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -397,7 +396,7 @@ const AdminServices = () => {
                       <td className="py-3 px-4 text-gray-900">${item.price.toFixed(2)}</td>
                       {activeTab === 'products' && (
                         <td className="py-3 px-4 text-gray-900">
-                          {'stock_quantity' in item ? item.stock_quantity : 0}
+                          {(item as Product).stock_quantity || 0}
                         </td>
                       )}
                       <td className="py-3 px-4">
