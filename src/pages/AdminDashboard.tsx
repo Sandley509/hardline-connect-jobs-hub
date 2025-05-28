@@ -90,7 +90,7 @@ const AdminDashboard = () => {
     {
       title: "Total Users",
       value: stats?.totalUsers || 0,
-      icon: users,
+      icon: Users,
       color: "text-blue-600",
       bgColor: "bg-blue-100"
     },
