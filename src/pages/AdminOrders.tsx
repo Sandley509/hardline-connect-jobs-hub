@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
-import { Package, user, chat-messages, Bell } from "lucide-react";
+import { Package, User, MessageCircle, Bell } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ChatModal from "@/components/ChatModal";
 
@@ -248,7 +248,7 @@ const AdminOrders = () => {
                             setShowChat(true);
                           }}
                         >
-                          <chat-messages className="h-4 w-4 mr-1" />
+                          <MessageCircle className="h-4 w-4 mr-1" />
                           Chat
                         </Button>
                       )}

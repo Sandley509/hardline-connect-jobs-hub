@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Send, chat-messages } from "lucide-react";
+import { Send, MessageCircle } from "lucide-react";
 
 interface CustomerChatProps {
   orderId: string;
@@ -88,7 +88,7 @@ const CustomerChat = ({ orderId }: CustomerChatProps) => {
       <Card className="fixed bottom-4 right-4 p-4 w-80 shadow-lg">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <chat-messages className="h-5 w-5 text-orange-600" />
+            <MessageCircle className="h-5 w-5 text-orange-600" />
             <span className="font-medium">Chat with Admin</span>
           </div>
           <Button
@@ -107,7 +107,7 @@ const CustomerChat = ({ orderId }: CustomerChatProps) => {
     <Card className="fixed bottom-4 right-4 w-80 h-96 shadow-lg flex flex-col">
       <div className="flex items-center justify-between p-4 border-b">
         <div className="flex items-center space-x-2">
-          <chat-messages className="h-5 w-5 text-orange-600" />
+          <MessageCircle className="h-5 w-5 text-orange-600" />
           <span className="font-medium">Chat with Admin</span>
         </div>
         <Button
