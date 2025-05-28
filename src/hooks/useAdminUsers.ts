@@ -22,13 +22,14 @@ export const useAdminUsers = () => {
   const { data: users, isLoading, error } = useQuery({
     queryKey: ['admin-users'],
     queryFn: async () => {
-      console.log('Fetching users for admin...');
+      console.log('Fetching all users for admin...');
       
       // Get current user to exclude from results
       const { data: { user: currentUser } } = await supabase.auth.getUser();
-      
-      // Get all profiles first
-      const { data: profiles, error: profilesError } = await supabase
+      console.log('Current admin user ID:', currentUser?.id);
+
+      // First, get ALL profiles without any filtering
+      const { data: allProfiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false });
@@ -38,18 +39,28 @@ export const useAdminUsers = () => {
         throw profilesError;
       }
 
-      console.log('Total profiles found:', profiles?.length || 0);
+      console.log('Total profiles found:', allProfiles?.length || 0);
+      console.log('All profiles:', allProfiles);
 
-      if (!profiles || profiles.length === 0) {
+      if (!allProfiles || allProfiles.length === 0) {
+        console.log('No profiles found in database');
         return [];
       }
 
       // Get user roles to identify admins
-      const { data: userRoles } = await supabase
+      const { data: userRoles, error: rolesError } = await supabase
         .from('user_roles')
         .select('user_id, role');
 
-      // Get additional data
+      if (rolesError) {
+        console.error('Error fetching user roles:', rolesError);
+        // Continue without roles if there's an error
+      }
+
+      console.log('User roles found:', userRoles?.length || 0);
+      console.log('User roles data:', userRoles);
+
+      // Get additional data in parallel
       const [userStatusResponse, userProfilesResponse, ordersResponse] = await Promise.all([
         supabase.from('user_status').select('*'),
         supabase.from('user_profiles').select('*'),
@@ -60,17 +71,31 @@ export const useAdminUsers = () => {
       const userProfiles = userProfilesResponse.data || [];
       const allOrders = ordersResponse.data || [];
 
+      console.log('User statuses found:', userStatuses.length);
+      console.log('User profiles found:', userProfiles.length);
+      console.log('Orders found:', allOrders.length);
+
       // Process users and filter out admins and current user
-      const processedUsers: UserProfile[] = profiles
+      const processedUsers: UserProfile[] = allProfiles
         .filter(profile => {
           // Exclude current user
-          if (profile.id === currentUser?.id) return false;
+          if (profile.id === currentUser?.id) {
+            console.log('Excluding current user:', profile.id);
+            return false;
+          }
           
           // Check if user is admin
-          const roles = userRoles?.filter(role => role.user_id === profile.id) || [];
-          const isAdmin = roles.some(role => role.role === 'admin');
+          const isAdmin = userRoles?.some(role => 
+            role.user_id === profile.id && role.role === 'admin'
+          ) || false;
           
-          return !isAdmin;
+          if (isAdmin) {
+            console.log('Excluding admin user:', profile.id);
+            return false;
+          }
+          
+          console.log('Including regular user:', profile.id, profile.username);
+          return true;
         })
         .map((profile) => {
           const status = userStatuses.find(s => s.user_id === profile.id);
@@ -83,6 +108,7 @@ export const useAdminUsers = () => {
             return sum + (isNaN(amount) ? 0 : amount);
           }, 0);
 
+          // Generate email based on available data
           let email = `${profile.username || 'user'}@example.com`;
           if (userProfile?.first_name && userProfile?.last_name) {
             email = `${userProfile.first_name.toLowerCase()}.${userProfile.last_name.toLowerCase()}@example.com`;
@@ -101,7 +127,8 @@ export const useAdminUsers = () => {
           };
         });
 
-      console.log('Processed non-admin users:', processedUsers.length);
+      console.log('Final processed users count:', processedUsers.length);
+      console.log('Processed users:', processedUsers);
       return processedUsers;
     }
   });
@@ -177,14 +204,12 @@ export const useAdminUsers = () => {
     mutationFn: async ({ userId, newPassword }: { userId: string; newPassword: string }) => {
       console.log('Password update requested for user:', userId);
       
-      // Since we can't use admin API, we'll store a password reset request
-      // This would typically trigger an email to the user or require additional implementation
+      // Note: This is a placeholder as we can't actually update passwords with the current setup
       toast({
         title: "Password update requested",
         description: "Password update functionality requires additional setup. Please check with your system administrator.",
       });
       
-      // For now, we'll just show success without actually updating
       return Promise.resolve();
     },
     onSuccess: () => {

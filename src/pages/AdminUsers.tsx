@@ -7,6 +7,7 @@ import { useState } from "react";
 import { Search } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import UserTable from "@/components/admin/UserTable";
+import UserDebugInfo from "@/components/admin/UserDebugInfo";
 import { useAdminUsers } from "@/hooks/useAdminUsers";
 
 const AdminUsers = () => {
@@ -68,6 +69,9 @@ const AdminUsers = () => {
             </div>
           </div>
         </div>
+
+        {/* Debug Information - Remove this once issue is resolved */}
+        <UserDebugInfo />
 
         <Card className="p-6">
           {isLoading ? (
