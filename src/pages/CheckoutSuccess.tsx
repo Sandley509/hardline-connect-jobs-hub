@@ -23,6 +23,27 @@ interface OrderDetails {
   order_items: OrderItem[];
 }
 
+// Define the raw database types to avoid TypeScript inference issues
+interface RawOrder {
+  id: string;
+  total_amount: number;
+  status: string;
+  created_at: string;
+  user_id: string;
+  updated_at: string;
+  stripe_session_id?: string;
+}
+
+interface RawOrderItem {
+  id: string;
+  order_id: string;
+  product_name: string;
+  product_type: string;
+  price: number;
+  quantity: number;
+  created_at: string;
+}
+
 const CheckoutSuccess = () => {
   const navigate = useNavigate();
   const { clearCart } = useCart();
@@ -52,7 +73,7 @@ const CheckoutSuccess = () => {
           .select('*')
           .eq('stripe_session_id', sessionId)
           .eq('user_id', user.id)
-          .single();
+          .single() as { data: RawOrder | null; error: any };
 
         if (error) {
           console.error('Error fetching order:', error);
@@ -72,12 +93,12 @@ const CheckoutSuccess = () => {
               }
             }
           });
-        } else {
+        } else if (orderData) {
           // Fetch order items separately to avoid deep type inference
           const { data: itemsData, error: itemsError } = await supabase
             .from('order_items')
             .select('*')
-            .eq('order_id', orderData.id);
+            .eq('order_id', orderData.id) as { data: RawOrderItem[] | null; error: any };
 
           if (!itemsError && itemsData) {
             const completeOrder: OrderDetails = {
