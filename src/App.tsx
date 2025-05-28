@@ -18,6 +18,8 @@ import Services from "./pages/Services";
 import Blog from "./pages/Blog";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import DashboardProfile from "./pages/DashboardProfile";
 import DashboardSettings from "./pages/DashboardSettings";
@@ -97,6 +99,8 @@ const App = () => (
                   <Signup />
                 </AuthRoute>
               } />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               
               {/* Protected Dashboard Routes */}
               <Route path="/dashboard" element={
