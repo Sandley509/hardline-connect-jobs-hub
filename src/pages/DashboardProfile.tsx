@@ -4,10 +4,21 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/components/ui/use-toast";
 import { User, Mail, Save, Camera } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+
+interface UserProfileData {
+  first_name: string;
+  last_name: string;
+  phone: string;
+  address: string;
+  city: string;
+  country: string;
+  bio: string;
+}
 
 const DashboardProfile = () => {
   const { user, updateProfile } = useAuth();
@@ -23,6 +34,45 @@ const DashboardProfile = () => {
     bio: ''
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [profileExists, setProfileExists] = useState(false);
+
+  // Load existing profile data
+  useEffect(() => {
+    const loadProfileData = async () => {
+      if (!user?.id) return;
+
+      try {
+        const { data: profileData, error } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error loading profile:', error);
+          return;
+        }
+
+        if (profileData) {
+          setProfileExists(true);
+          setFormData(prev => ({
+            ...prev,
+            firstName: profileData.first_name || '',
+            lastName: profileData.last_name || '',
+            phone: profileData.phone || '',
+            address: profileData.address || '',
+            city: profileData.city || '',
+            country: profileData.country || '',
+            bio: profileData.bio || ''
+          }));
+        }
+      } catch (error) {
+        console.error('Error loading profile data:', error);
+      }
+    };
+
+    loadProfileData();
+  }, [user?.id]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
@@ -36,16 +86,50 @@ const DashboardProfile = () => {
     setIsLoading(true);
 
     try {
-      updateProfile({
+      // Update auth profile (username)
+      await updateProfile({
         username: formData.username,
         email: formData.email
       });
+
+      // Prepare user profile data
+      const profileData: UserProfileData = {
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        phone: formData.phone,
+        address: formData.address,
+        city: formData.city,
+        country: formData.country,
+        bio: formData.bio
+      };
+
+      if (profileExists) {
+        // Update existing profile
+        const { error } = await supabase
+          .from('user_profiles')
+          .update(profileData)
+          .eq('user_id', user?.id);
+
+        if (error) throw error;
+      } else {
+        // Create new profile
+        const { error } = await supabase
+          .from('user_profiles')
+          .insert({
+            user_id: user?.id,
+            ...profileData
+          });
+
+        if (error) throw error;
+        setProfileExists(true);
+      }
       
       toast({
         title: "Profile Updated",
         description: "Your profile has been successfully updated.",
       });
     } catch (error) {
+      console.error('Profile update error:', error);
       toast({
         title: "Error",
         description: "Failed to update profile. Please try again.",
@@ -112,6 +196,7 @@ const DashboardProfile = () => {
                         onChange={handleChange}
                         className="pl-10"
                         placeholder="Email address"
+                        disabled
                       />
                     </div>
                   </div>
@@ -196,7 +281,7 @@ const DashboardProfile = () => {
                     rows={4}
                     value={formData.bio}
                     onChange={handleChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 px-3 py-2"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 px-3 py-2 border border-input bg-background text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     placeholder="Tell us about yourself..."
                   />
                 </div>
