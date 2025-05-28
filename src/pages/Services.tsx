@@ -48,7 +48,7 @@ const Services = () => {
     },
     {
       id: "interview-proxy",
-      name: "Interview Proxy Service",
+      name: "Interview ",
       price: 40.00,
       image: "/placeholder.svg",
       icon: Users,

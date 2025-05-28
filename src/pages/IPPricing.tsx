@@ -17,7 +17,7 @@ const IPPricing = () => {
   const ipPricingPlans = [
     {
       name: "Basic IP",
-      price: "$15",
+      price: "$45",
       period: "/month",
       popular: false,
       features: [
@@ -30,12 +30,12 @@ const IPPricing = () => {
       icon: <Server className="h-8 w-8" />
     },
     {
-      name: "Professional IP",
-      price: "$35",
+      name: "Residential IP",
+      price: "$55",
       period: "/month",
       popular: true,
       features: [
-        "3 Dedicated IP Addresses",
+        "1 Dedicated IP Addresses",
         "USA Multi-Location",
         "99.99% Uptime",
         "Priority Support",
@@ -45,12 +45,12 @@ const IPPricing = () => {
       icon: <Shield className="h-8 w-8" />
     },
     {
-      name: "Enterprise IP",
+      name: "Multiple  IP",
       price: "$75",
       period: "/month",
       popular: false,
       features: [
-        "10 Dedicated IP Addresses",
+        "2 Dedicated IP Addresses",
         "USA Premium Locations",
         "99.99% Uptime SLA",
         "Dedicated Support Manager",

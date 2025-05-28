@@ -35,11 +35,11 @@ const Shop = () => {
     },
     {
       id: "headset-3",
-      name: "Remote Work Essential",
+      name: "Spark 06",
       price: 59.99,
-      image: "/placeholder.svg",
+      image: "/spark06.jpg",
       stripeProductId: "prod_headset_essential_789",
-      features: ["Crystal Clear Audio", "Lightweight Design", "Plug & Play", "Compatible with All Devices"],
+      features: ["Crystal Clear Audio", "Lightweight Design","Noise cancellation", "Plug & Play", "Compatible with All Devices"],
       description: "Budget-friendly option that doesn't compromise on quality."
     }
   ];
@@ -48,7 +48,7 @@ const Shop = () => {
     {
       id: "router-1",
       name: "GL.iNet GL-MT300N-V2",
-      price: 29.99,
+      price: 47.99,
       image: "/glinetmt300.webp",
       stripeProductId: "prod_router_mt300_123",
       features: ["Mini Travel Router", "OpenWrt Pre-installed", "300Mbps WiFi", "Portable Design"],
@@ -57,7 +57,7 @@ const Shop = () => {
     {
       id: "router-2",
       name: "GL.iNet GL-AXT1800",
-      price: 89.99,
+      price: 149.99,
       image: "/glinetaxt.webp",
       stripeProductId: "prod_router_axt1800_456",
       features: ["WiFi 6 Router", "1800Mbps Speed", "VPN Client & Server", "Gigabit Ports"],
@@ -66,7 +66,7 @@ const Shop = () => {
     {
       id: "router-3",
       name: "GL.iNet GL-MT1300",
-      price: 69.99,
+      price: 139.99,
       image: "/mt1300.jpg",
       stripeProductId: "prod_router_mt1300_789",
       features: ["Beryl Travel Router", "AC1300 WiFi", "VPN Ready", "Compact Design"],
