@@ -16,9 +16,11 @@ interface UserTableProps {
   users: UserProfile[];
   onBlockUser: (userId: string) => void;
   onUnblockUser: (userId: string) => void;
+  onUpdatePassword: (userId: string, username: string) => void;
   onDeleteUser: (userId: string, username: string) => void;
   isBlocking: boolean;
   isUnblocking: boolean;
+  isUpdatingPassword: boolean;
   isDeleting: boolean;
 }
 
@@ -26,9 +28,11 @@ const UserTable = ({
   users,
   onBlockUser,
   onUnblockUser,
+  onUpdatePassword,
   onDeleteUser,
   isBlocking,
   isUnblocking,
+  isUpdatingPassword,
   isDeleting
 }: UserTableProps) => {
   return (
@@ -52,9 +56,11 @@ const UserTable = ({
               user={user}
               onBlockUser={onBlockUser}
               onUnblockUser={onUnblockUser}
+              onUpdatePassword={onUpdatePassword}
               onDeleteUser={onDeleteUser}
               isBlocking={isBlocking}
               isUnblocking={isUnblocking}
+              isUpdatingPassword={isUpdatingPassword}
               isDeleting={isDeleting}
             />
           ))}
@@ -63,7 +69,7 @@ const UserTable = ({
 
       {users.length === 0 && (
         <div className="text-center py-8">
-          <p className="text-gray-500">No users found. Users will appear here once they sign up and create profiles.</p>
+          <p className="text-gray-500">No non-admin users found. Users will appear here once they sign up and create profiles.</p>
         </div>
       )}
     </div>

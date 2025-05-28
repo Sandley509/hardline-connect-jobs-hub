@@ -19,6 +19,7 @@ const AdminUsers = () => {
     error,
     blockUserMutation,
     unblockUserMutation,
+    updatePasswordMutation,
     deleteUserMutation
   } = useAdminUsers();
 
@@ -31,6 +32,15 @@ const AdminUsers = () => {
     const reason = prompt("Enter reason for blocking this user:");
     if (reason) {
       blockUserMutation.mutate({ userId, reason });
+    }
+  };
+
+  const handleUpdatePassword = (userId: string, username: string) => {
+    const newPassword = prompt(`Enter new password for user "${username}":`);
+    if (newPassword && newPassword.length >= 6) {
+      updatePasswordMutation.mutate({ userId, newPassword });
+    } else if (newPassword) {
+      alert("Password must be at least 6 characters long.");
     }
   };
 
@@ -79,9 +89,11 @@ const AdminUsers = () => {
               users={filteredUsers || []}
               onBlockUser={handleBlockUser}
               onUnblockUser={(userId) => unblockUserMutation.mutate(userId)}
+              onUpdatePassword={handleUpdatePassword}
               onDeleteUser={handleDeleteUser}
               isBlocking={blockUserMutation.isPending}
               isUnblocking={unblockUserMutation.isPending}
+              isUpdatingPassword={updatePasswordMutation.isPending}
               isDeleting={deleteUserMutation.isPending}
             />
           )}

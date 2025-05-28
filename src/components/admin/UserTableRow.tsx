@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Ban, CheckCircle, AlertTriangle, Package } from "lucide-react";
+import { Ban, CheckCircle, AlertTriangle, Package, Key } from "lucide-react";
 
 interface UserProfile {
   id: string;
@@ -17,9 +17,11 @@ interface UserTableRowProps {
   user: UserProfile;
   onBlockUser: (userId: string) => void;
   onUnblockUser: (userId: string) => void;
+  onUpdatePassword: (userId: string, username: string) => void;
   onDeleteUser: (userId: string, username: string) => void;
   isBlocking: boolean;
   isUnblocking: boolean;
+  isUpdatingPassword: boolean;
   isDeleting: boolean;
 }
 
@@ -27,9 +29,11 @@ const UserTableRow = ({
   user,
   onBlockUser,
   onUnblockUser,
+  onUpdatePassword,
   onDeleteUser,
   isBlocking,
   isUnblocking,
+  isUpdatingPassword,
   isDeleting
 }: UserTableRowProps) => {
   return (
@@ -73,7 +77,7 @@ const UserTableRow = ({
         )}
       </td>
       <td className="py-3 px-4">
-        <div className="flex space-x-2">
+        <div className="flex space-x-2 flex-wrap gap-1">
           {user.is_blocked ? (
             <Button
               size="sm"
@@ -95,6 +99,15 @@ const UserTableRow = ({
               Block
             </Button>
           )}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onUpdatePassword(user.id, user.username)}
+            disabled={isUpdatingPassword}
+          >
+            <Key className="h-4 w-4 mr-1" />
+            Password
+          </Button>
           <Button
             size="sm"
             variant="destructive"

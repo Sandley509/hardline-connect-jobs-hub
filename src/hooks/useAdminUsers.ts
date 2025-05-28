@@ -12,6 +12,7 @@ interface UserProfile {
   blocked_reason?: string;
   order_count?: number;
   total_spent?: number;
+  is_admin?: boolean;
 }
 
 export const useAdminUsers = () => {
@@ -41,46 +42,53 @@ export const useAdminUsers = () => {
       }
 
       // Get additional data
-      const [userStatusResponse, userProfilesResponse, ordersResponse] = await Promise.all([
+      const [userStatusResponse, userProfilesResponse, ordersResponse, userRolesResponse] = await Promise.all([
         supabase.from('user_status').select('*'),
         supabase.from('user_profiles').select('*'),
-        supabase.from('orders').select('user_id, total_amount')
+        supabase.from('orders').select('user_id, total_amount'),
+        supabase.from('user_roles').select('user_id, role')
       ]);
 
       const userStatuses = userStatusResponse.data || [];
       const userProfiles = userProfilesResponse.data || [];
       const allOrders = ordersResponse.data || [];
+      const userRoles = userRolesResponse.data || [];
 
-      // Process users
-      const processedUsers: UserProfile[] = profiles.map((profile) => {
-        const status = userStatuses.find(s => s.user_id === profile.id);
-        const userProfile = userProfiles.find(up => up.user_id === profile.id);
-        const userOrders = allOrders.filter(order => order.user_id === profile.id);
-        
-        const orderCount = userOrders.length;
-        const totalSpent = userOrders.reduce((sum, order) => {
-          const amount = parseFloat(order.total_amount?.toString() || '0');
-          return sum + (isNaN(amount) ? 0 : amount);
-        }, 0);
+      // Process users and filter out admins
+      const processedUsers: UserProfile[] = profiles
+        .map((profile) => {
+          const status = userStatuses.find(s => s.user_id === profile.id);
+          const userProfile = userProfiles.find(up => up.user_id === profile.id);
+          const userOrders = allOrders.filter(order => order.user_id === profile.id);
+          const roles = userRoles.filter(role => role.user_id === profile.id);
+          
+          const isAdmin = roles.some(role => role.role === 'admin');
+          const orderCount = userOrders.length;
+          const totalSpent = userOrders.reduce((sum, order) => {
+            const amount = parseFloat(order.total_amount?.toString() || '0');
+            return sum + (isNaN(amount) ? 0 : amount);
+          }, 0);
 
-        let email = `${profile.username || 'user'}@example.com`;
-        if (userProfile?.first_name && userProfile?.last_name) {
-          email = `${userProfile.first_name.toLowerCase()}.${userProfile.last_name.toLowerCase()}@example.com`;
-        }
+          let email = `${profile.username || 'user'}@example.com`;
+          if (userProfile?.first_name && userProfile?.last_name) {
+            email = `${userProfile.first_name.toLowerCase()}.${userProfile.last_name.toLowerCase()}@example.com`;
+          }
 
-        return {
-          id: profile.id,
-          username: profile.username || 'Unknown User',
-          email,
-          created_at: profile.created_at,
-          is_blocked: status?.is_blocked || false,
-          blocked_reason: status?.blocked_reason || null,
-          order_count: orderCount,
-          total_spent: totalSpent
-        };
-      });
+          return {
+            id: profile.id,
+            username: profile.username || 'Unknown User',
+            email,
+            created_at: profile.created_at,
+            is_blocked: status?.is_blocked || false,
+            blocked_reason: status?.blocked_reason || null,
+            order_count: orderCount,
+            total_spent: totalSpent,
+            is_admin: isAdmin
+          };
+        })
+        .filter(user => !user.is_admin); // Filter out admin users
 
-      console.log('Processed users:', processedUsers.length);
+      console.log('Processed non-admin users:', processedUsers.length);
       return processedUsers;
     }
   });
@@ -152,6 +160,33 @@ export const useAdminUsers = () => {
     }
   });
 
+  const updatePasswordMutation = useMutation({
+    mutationFn: async ({ userId, newPassword }: { userId: string; newPassword: string }) => {
+      console.log('Updating password for user:', userId);
+      
+      // Use Supabase Admin API to update user password
+      const { error } = await supabase.auth.admin.updateUserById(userId, {
+        password: newPassword
+      });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Password updated successfully",
+        description: "The user's password has been updated.",
+      });
+    },
+    onError: (error) => {
+      console.error('Error updating password:', error);
+      toast({
+        title: "Error updating password",
+        description: "There was an error updating the user's password. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: string) => {
       console.log('Deleting user:', userId);
@@ -194,6 +229,7 @@ export const useAdminUsers = () => {
     error,
     blockUserMutation,
     unblockUserMutation,
+    updatePasswordMutation,
     deleteUserMutation
   };
 };
