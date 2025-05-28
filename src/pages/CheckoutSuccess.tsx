@@ -37,63 +37,92 @@ const CheckoutSuccess = () => {
   useEffect(() => {
     const verifyPayment = async () => {
       if (!sessionId || !user) {
+        console.log('Missing session ID or user, redirecting...');
         setIsVerifying(false);
         return;
       }
 
       try {
-        console.log('Verifying payment for session:', sessionId);
+        console.log('Verifying payment for session:', sessionId, 'user:', user.email);
         
-        // Wait a moment for webhook to process
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // Wait for potential webhook processing
+        await new Promise(resolve => setTimeout(resolve, 3000));
         
-        // Check if order was created by looking for it in our database
-        const orderQuery = await supabase
+        // Check if order exists
+        console.log('Checking for existing order...');
+        const { data: existingOrder, error: orderError } = await supabase
           .from('orders')
-          .select('*')
+          .select(`
+            id,
+            total_amount,
+            status,
+            created_at,
+            order_items(*)
+          `)
           .eq('stripe_session_id', sessionId)
           .eq('user_id', user.id)
           .maybeSingle();
 
-        if (orderQuery.error) {
-          console.error('Error fetching order:', orderQuery.error);
-          // If no order found, trigger webhook manually
-          await supabase.functions.invoke('stripe-webhook', {
-            body: {
-              type: 'checkout.session.completed',
-              data: {
-                object: {
-                  id: sessionId,
-                  customer_email: user.email,
-                  metadata: {
-                    total_amount: '0',
-                    items: '[]'
+        if (orderError) {
+          console.error('Error checking for existing order:', orderError);
+        }
+
+        if (existingOrder) {
+          console.log('Found existing order:', existingOrder.id);
+          setOrderDetails(existingOrder);
+        } else {
+          console.log('No existing order found, triggering webhook manually...');
+          
+          // Manually trigger webhook processing
+          try {
+            const { data: webhookResult, error: webhookError } = await supabase.functions.invoke('stripe-webhook', {
+              body: {
+                type: 'checkout.session.completed',
+                data: {
+                  object: {
+                    id: sessionId,
+                    customer_email: user.email,
+                    amount_total: 0, // Will be retrieved from Stripe
+                    metadata: {
+                      items: '[]'
+                    }
                   }
                 }
               }
-            }
-          });
-        } else if (orderQuery.data) {
-          // Fetch order items separately
-          const itemsQuery = await supabase
-            .from('order_items')
-            .select('*')
-            .eq('order_id', orderQuery.data.id);
+            });
 
-          if (!itemsQuery.error && itemsQuery.data) {
-            const completeOrder: OrderDetails = {
-              id: orderQuery.data.id,
-              total_amount: orderQuery.data.total_amount,
-              status: orderQuery.data.status,
-              created_at: orderQuery.data.created_at,
-              order_items: itemsQuery.data
-            };
-            setOrderDetails(completeOrder);
-            console.log('Order found:', completeOrder);
+            if (webhookError) {
+              console.error('Webhook trigger error:', webhookError);
+            } else {
+              console.log('Webhook triggered successfully:', webhookResult);
+              
+              // Wait a bit and check again
+              await new Promise(resolve => setTimeout(resolve, 2000));
+              
+              const { data: newOrder } = await supabase
+                .from('orders')
+                .select(`
+                  id,
+                  total_amount,
+                  status,
+                  created_at,
+                  order_items(*)
+                `)
+                .eq('stripe_session_id', sessionId)
+                .eq('user_id', user.id)
+                .maybeSingle();
+
+              if (newOrder) {
+                console.log('Order created after manual webhook trigger:', newOrder.id);
+                setOrderDetails(newOrder);
+              }
+            }
+          } catch (webhookError) {
+            console.error('Failed to trigger webhook:', webhookError);
           }
         }
 
-        // Clear cart after successful payment verification
+        // Clear cart after processing
         clearCart();
         setIsVerifying(false);
       } catch (error) {
@@ -164,6 +193,16 @@ const CheckoutSuccess = () => {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+          
+          {!orderDetails && (
+            <div className="bg-yellow-50 rounded-lg p-6 mb-8">
+              <h2 className="text-lg font-semibold text-yellow-800 mb-2">Order Processing</h2>
+              <p className="text-yellow-700">
+                Your payment was successful, but we're still processing your order. 
+                You should receive a confirmation email shortly, and your order will appear in your dashboard within a few minutes.
+              </p>
             </div>
           )}
           
