@@ -16,7 +16,8 @@ import {
   BarChart3,
   Package,
   User,
-  FileText
+  FileText,
+  Wrench
 } from "lucide-react";
 
 interface AdminLayoutProps {
@@ -38,6 +39,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     { path: '/admin/dashboard', icon: BarChart3, label: 'Dashboard' },
     { path: '/admin/orders', icon: Package, label: 'Order Management' },
     { path: '/admin/users', icon: User, label: 'User Management' },
+    { path: '/admin/services', icon: Wrench, label: 'Services & Products' },
     { path: '/admin/jobs', icon: Briefcase, label: 'Job Management' },
     { path: '/admin/blog', icon: FileText, label: 'Blog Management' },
     { path: '/admin/notifications', icon: Bell, label: 'Notifications' },

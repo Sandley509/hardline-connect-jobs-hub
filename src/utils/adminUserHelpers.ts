@@ -84,17 +84,19 @@ export const processUserData = (
 ): UserProfile[] => {
   return allProfiles
     .filter(profile => {
+      // Exclude current user (admin viewing the page)
       if (profile.id === currentUserId) {
         console.log('Excluding current user:', profile.id);
         return false;
       }
       
+      // Exclude all admin users - we only want to show regular users
       if (adminUserIds.includes(profile.id)) {
-        console.log('Excluding confirmed admin user:', profile.id);
+        console.log('Excluding admin user:', profile.id);
         return false;
       }
       
-      console.log('Including user:', profile.id, profile.username);
+      console.log('Including regular user:', profile.id, profile.username);
       return true;
     })
     .map((profile) => {
@@ -123,10 +125,10 @@ export const processUserData = (
           blocked_reason: status?.blocked_reason || null,
           order_count: orderCount,
           total_spent: totalSpent,
-          is_admin: false
+          is_admin: false // These are all regular users now
         };
 
-        console.log('Processed user:', processedUser);
+        console.log('Processed regular user:', processedUser);
         return processedUser;
       } catch (err) {
         console.error('Error processing user:', profile.id, err);
