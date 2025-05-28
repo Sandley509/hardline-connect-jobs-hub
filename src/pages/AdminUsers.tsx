@@ -1,4 +1,3 @@
-
 import AdminLayout from "@/components/AdminLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,44 +27,56 @@ const AdminUsers = () => {
   const { data: users, isLoading } = useQuery({
     queryKey: ['admin-users'],
     queryFn: async () => {
-      // Get profiles with order statistics
+      console.log('Fetching users...');
+      
+      // Get all profiles
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (profilesError) throw profilesError;
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+        throw profilesError;
+      }
 
-      // For each profile, get user status and order statistics
-      const usersWithStatus = await Promise.all(
-        (profiles || []).map(async (profile) => {
-          // Get user status
-          const { data: status } = await supabase
-            .from('user_status')
-            .select('*')
-            .eq('user_id', profile.id)
-            .single();
+      console.log('Profiles fetched:', profiles);
 
-          // Get order statistics
-          const { data: orderStats } = await supabase
-            .from('orders')
-            .select('total_amount')
-            .eq('user_id', profile.id);
+      if (!profiles || profiles.length === 0) {
+        return [];
+      }
 
-          const orderCount = orderStats?.length || 0;
-          const totalSpent = orderStats?.reduce((sum, order) => sum + parseFloat(order.total_amount.toString()), 0) || 0;
+      // Get all user statuses in one query
+      const { data: userStatuses } = await supabase
+        .from('user_status')
+        .select('*');
 
-          return {
-            ...profile,
-            email: `user-${profile.id.slice(0, 8)}@example.com`,
-            is_blocked: status?.is_blocked || false,
-            blocked_reason: status?.blocked_reason,
-            order_count: orderCount,
-            total_spent: totalSpent
-          };
-        })
-      );
+      // Get all orders in one query for counting
+      const { data: allOrders } = await supabase
+        .from('orders')
+        .select('user_id, total_amount');
 
+      // Process the data
+      const usersWithStatus = profiles.map((profile) => {
+        // Find user status
+        const status = userStatuses?.find(s => s.user_id === profile.id);
+
+        // Calculate order statistics
+        const userOrders = allOrders?.filter(order => order.user_id === profile.id) || [];
+        const orderCount = userOrders.length;
+        const totalSpent = userOrders.reduce((sum, order) => sum + parseFloat(order.total_amount.toString()), 0);
+
+        return {
+          ...profile,
+          email: `user-${profile.id.slice(0, 8)}@example.com`,
+          is_blocked: status?.is_blocked || false,
+          blocked_reason: status?.blocked_reason,
+          order_count: orderCount,
+          total_spent: totalSpent
+        };
+      });
+
+      console.log('Processed users:', usersWithStatus);
       return usersWithStatus;
     }
   });
@@ -240,6 +251,12 @@ const AdminUsers = () => {
                   ))}
                 </tbody>
               </table>
+
+              {(!filteredUsers || filteredUsers.length === 0) && !isLoading && (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">No users found</p>
+                </div>
+              )}
             </div>
           )}
         </Card>
