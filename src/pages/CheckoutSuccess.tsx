@@ -31,6 +31,7 @@ const CheckoutSuccess = () => {
   const [searchParams] = useSearchParams();
   const [isVerifying, setIsVerifying] = useState(true);
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
+  const [error, setError] = useState<string | null>(null);
   
   const sessionId = searchParams.get('session_id');
 
@@ -41,16 +42,15 @@ const CheckoutSuccess = () => {
       console.log('User:', user?.email);
 
       if (!sessionId) {
-        console.log('No session ID found');
+        console.log('No session ID found, redirecting to shop');
+        setError('Invalid payment session');
         setIsVerifying(false);
+        setTimeout(() => navigate('/shop'), 2000);
         return;
       }
 
       try {
-        // Wait for potential webhook processing
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        
-        // Check for existing order first
+        // First check if order already exists
         console.log('Checking for existing order...');
         const { data: existingOrder, error: orderError } = await supabase
           .from('orders')
@@ -76,86 +76,100 @@ const CheckoutSuccess = () => {
           return;
         }
 
-        console.log('No order found, creating fallback order...');
+        // Wait a bit for webhook processing
+        console.log('No existing order found, waiting for webhook...');
+        await new Promise(resolve => setTimeout(resolve, 2000));
         
-        // Fallback: Create order directly if webhook didn't process it
-        try {
-          // First, find the user
-          let userId = null;
-          if (user?.id) {
-            userId = user.id;
-          }
+        // Check again after waiting
+        const { data: delayedOrder, error: delayedError } = await supabase
+          .from('orders')
+          .select(`
+            id,
+            total_amount,
+            status,
+            created_at,
+            order_items(*)
+          `)
+          .eq('stripe_session_id', sessionId)
+          .maybeSingle();
 
-          // Create fallback order
-          const fallbackOrderData = {
-            user_id: userId,
-            total_amount: 25.00, // Default fallback amount
-            status: 'completed',
-            stripe_session_id: sessionId,
-            created_at: new Date().toISOString()
-          };
+        if (delayedOrder) {
+          console.log('Found order after delay:', delayedOrder.id);
+          setOrderDetails(delayedOrder);
+          clearCart();
+          setIsVerifying(false);
+          return;
+        }
 
-          const { data: fallbackOrder, error: fallbackOrderError } = await supabase
-            .from('orders')
-            .insert(fallbackOrderData)
-            .select()
-            .single();
+        // If still no order, create a fallback order
+        console.log('Creating fallback order...');
+        const fallbackOrderData = {
+          user_id: user?.id || null,
+          total_amount: 25.00,
+          status: 'completed',
+          stripe_session_id: sessionId,
+          created_at: new Date().toISOString()
+        };
 
-          if (fallbackOrderError) {
-            console.error('Fallback order creation error:', fallbackOrderError);
-          } else {
-            console.log('Fallback order created:', fallbackOrder.id);
-            
-            // Create fallback order items
-            const fallbackItems = [{
-              order_id: fallbackOrder.id,
-              product_name: 'Shop Purchase',
-              product_type: 'product',
-              price: 25.00,
-              quantity: 1
-            }];
+        const { data: fallbackOrder, error: fallbackOrderError } = await supabase
+          .from('orders')
+          .insert(fallbackOrderData)
+          .select()
+          .single();
 
-            const { error: fallbackItemsError } = await supabase
-              .from('order_items')
-              .insert(fallbackItems);
+        if (fallbackOrderError) {
+          console.error('Fallback order creation error:', fallbackOrderError);
+          throw new Error('Failed to create order');
+        }
 
-            if (fallbackItemsError) {
-              console.error('Fallback order items error:', fallbackItemsError);
-            } else {
-              console.log('Fallback order items created');
-              
-              // Fetch complete order with items
-              const { data: completeOrder } = await supabase
-                .from('orders')
-                .select(`
-                  id,
-                  total_amount,
-                  status,
-                  created_at,
-                  order_items(*)
-                `)
-                .eq('id', fallbackOrder.id)
-                .single();
+        console.log('Fallback order created:', fallbackOrder.id);
+        
+        // Create fallback order items
+        const fallbackItems = [{
+          order_id: fallbackOrder.id,
+          product_name: 'Shop Purchase',
+          product_type: 'product',
+          price: 25.00,
+          quantity: 1
+        }];
 
-              if (completeOrder) {
-                setOrderDetails(completeOrder);
-              }
-            }
-          }
-        } catch (fallbackError) {
-          console.error('Fallback order creation failed:', fallbackError);
+        const { error: fallbackItemsError } = await supabase
+          .from('order_items')
+          .insert(fallbackItems);
+
+        if (fallbackItemsError) {
+          console.error('Fallback order items error:', fallbackItemsError);
+        }
+
+        // Fetch complete order with items
+        const { data: completeOrder } = await supabase
+          .from('orders')
+          .select(`
+            id,
+            total_amount,
+            status,
+            created_at,
+            order_items(*)
+          `)
+          .eq('id', fallbackOrder.id)
+          .single();
+
+        if (completeOrder) {
+          setOrderDetails(completeOrder);
         }
 
         clearCart();
         setIsVerifying(false);
+
       } catch (error) {
         console.error('Payment verification error:', error);
+        setError('Failed to verify payment. Please contact support.');
         setIsVerifying(false);
       }
     };
 
     verifyPayment();
-  }, [sessionId, clearCart, user]);
+  }, [sessionId, clearCart, user, navigate]);
 
   if (isVerifying) {
     return (
@@ -171,6 +185,32 @@ const CheckoutSuccess = () => {
             <p className="text-xl text-gray-600 mb-8">
               Please wait while we confirm your payment and create your order.
             </p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error) {
+    return (
+      <Layout>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="text-center">
+            <div className="mx-auto flex items-center justify-center h-24 w-24 rounded-full bg-red-100 mb-8">
+              <CheckCircle className="h-12 w-12 text-red-600" />
+            </div>
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              Payment Error
+            </h1>
+            <p className="text-xl text-gray-600 mb-8">
+              {error}
+            </p>
+            <Button
+              onClick={() => navigate('/shop')}
+              className="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700"
+            >
+              Return to Shop
+            </Button>
           </div>
         </div>
       </Layout>
@@ -246,14 +286,16 @@ const CheckoutSuccess = () => {
               <ShoppingBag className="h-5 w-5 mr-2" />
               Continue Shopping
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => navigate('/dashboard/orders')}
-              className="inline-flex items-center px-6 py-3"
-            >
-              View Orders
-              <ArrowRight className="h-5 w-5 ml-2" />
-            </Button>
+            {user && (
+              <Button
+                variant="outline"
+                onClick={() => navigate('/dashboard/orders')}
+                className="inline-flex items-center px-6 py-3"
+              >
+                View Orders
+                <ArrowRight className="h-5 w-5 ml-2" />
+              </Button>
+            )}
           </div>
         </div>
       </div>

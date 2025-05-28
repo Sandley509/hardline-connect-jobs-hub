@@ -38,8 +38,9 @@ serve(async (req) => {
       throw new Error("No items provided for checkout");
     }
 
-    // Get the origin from the request to build full URLs for images
-    const origin = req.headers.get("origin") || "https://cffe9dc8-4e75-42ec-aef2-997f75bc61ab.lovableproject.com";
+    // Get the origin from the request
+    const origin = req.headers.get("origin") || req.headers.get("referer")?.replace(/\/$/, '') || "https://cffe9dc8-4e75-42ec-aef2-997f75bc61ab.lovableproject.com";
+    console.log('Using origin for URLs:', origin);
 
     // Create line items for Stripe
     const lineItems = items.map((item: any) => {
@@ -67,9 +68,9 @@ serve(async (req) => {
       total + (item.price * item.quantity), 0
     );
 
-    console.log('Creating Stripe session with:', { lineItems, totalAmount });
+    console.log('Creating Stripe session with:', { lineItems, totalAmount, origin });
 
-    // Create Stripe checkout session
+    // Create Stripe checkout session with proper URLs
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: lineItems,
@@ -86,6 +87,7 @@ serve(async (req) => {
     });
 
     console.log('Stripe session created successfully:', session.id);
+    console.log('Success URL will be:', `${origin}/checkout-success?session_id=${session.id}`);
 
     return new Response(JSON.stringify({ url: session.url, sessionId: session.id }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
