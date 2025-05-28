@@ -1,3 +1,4 @@
+
 import AdminLayout from "@/components/AdminLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -5,23 +6,33 @@ import { Badge } from "@/components/ui/badge";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
-import { Package, User, MessageCircle, Bell } from "lucide-react";
+import { Package, User, MessageCircle, Bell, Trash2, Eye, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ChatModal from "@/components/ChatModal";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface Order {
   order_id: string;
   user_id: string;
   username: string;
+  user_email: string;
+  user_phone: string | null;
+  user_address: string | null;
+  user_city: string | null;
+  user_country: string | null;
+  first_name: string | null;
+  last_name: string | null;
   total_amount: number;
   status: string;
   created_at: string;
+  stripe_session_id: string | null;
   items: any[];
 }
 
 const AdminOrders = () => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showChat, setShowChat] = useState(false);
+  const [showCustomerDetails, setShowCustomerDetails] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -37,28 +48,55 @@ const AdminOrders = () => {
           total_amount,
           status,
           created_at,
+          stripe_session_id,
           order_items(*)
         `)
         .order('created_at', { ascending: false });
 
       if (ordersError) throw ordersError;
 
-      // Then get user profiles for each order
+      // Then get user profiles and user_profiles for each order
       const ordersWithProfiles = await Promise.all(
         (ordersData || []).map(async (order) => {
+          // Get basic profile
           const { data: profile } = await supabase
             .from('profiles')
             .select('username')
             .eq('id', order.user_id)
             .single();
 
+          // Get detailed user profile
+          const { data: userProfile } = await supabase
+            .from('user_profiles')
+            .select('first_name, last_name, phone, address, city, country')
+            .eq('user_id', order.user_id)
+            .single();
+
+          // Get user email from auth metadata (we'll need to get this via a different approach)
+          // For now, we'll fetch it using a direct query if possible
+          let userEmail = 'N/A';
+          try {
+            const { data: userData } = await supabase.auth.admin.getUserById(order.user_id);
+            userEmail = userData.user?.email || 'N/A';
+          } catch (error) {
+            console.log('Could not fetch user email:', error);
+          }
+
           return {
             order_id: order.id,
             user_id: order.user_id,
             username: profile?.username || 'Unknown',
+            user_email: userEmail,
+            user_phone: userProfile?.phone || null,
+            user_address: userProfile?.address || null,
+            user_city: userProfile?.city || null,
+            user_country: userProfile?.country || null,
+            first_name: userProfile?.first_name || null,
+            last_name: userProfile?.last_name || null,
             total_amount: order.total_amount,
             status: order.status,
             created_at: order.created_at,
+            stripe_session_id: order.stripe_session_id,
             items: order.order_items || []
           };
         })
@@ -120,6 +158,40 @@ const AdminOrders = () => {
     }
   });
 
+  const deleteOrder = useMutation({
+    mutationFn: async (orderId: string) => {
+      // First delete order items
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .delete()
+        .eq('order_id', orderId);
+
+      if (itemsError) throw itemsError;
+
+      // Then delete the order
+      const { error: orderError } = await supabase
+        .from('orders')
+        .delete()
+        .eq('id', orderId);
+
+      if (orderError) throw orderError;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+      toast({
+        title: "Order deleted successfully",
+        description: "The order has been permanently deleted.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error deleting order",
+        description: "There was an error deleting the order.",
+        variant: "destructive",
+      });
+    }
+  });
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed':
@@ -137,6 +209,17 @@ const AdminOrders = () => {
 
   const hasServices = (items: any[]) => {
     return items.some(item => item.product_type === 'service');
+  };
+
+  const handleViewCustomer = (order: Order) => {
+    setSelectedOrder(order);
+    setShowCustomerDetails(true);
+  };
+
+  const handleDeleteOrder = (orderId: string) => {
+    if (window.confirm('Are you sure you want to delete this order? This action cannot be undone.')) {
+      deleteOrder.mutate(orderId);
+    }
   };
 
   return (
@@ -208,6 +291,11 @@ const AdminOrders = () => {
                       <span className="text-sm text-gray-600">
                         Customer: {order.username}
                       </span>
+                      {order.stripe_session_id && (
+                        <Badge variant="outline" className="text-xs">
+                          Stripe: {order.stripe_session_id.slice(0, 12)}...
+                        </Badge>
+                      )}
                     </div>
                     <div className="text-right">
                       <div className="text-lg font-bold text-orange-600">
@@ -265,6 +353,25 @@ const AdminOrders = () => {
                         </Button>
                       )}
                     </div>
+
+                    <div className="flex space-x-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleViewCustomer(order)}
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        View Customer
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => handleDeleteOrder(order.order_id)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Delete
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -279,6 +386,72 @@ const AdminOrders = () => {
           )}
         </Card>
       </div>
+
+      {/* Customer Details Modal */}
+      <Dialog open={showCustomerDetails} onOpenChange={setShowCustomerDetails}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <User className="h-5 w-5" />
+              <span>Customer Details</span>
+            </DialogTitle>
+          </DialogHeader>
+          {selectedOrder && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 gap-3">
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Order ID</label>
+                  <p className="text-gray-900">#{selectedOrder.order_id.slice(0, 8)}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Username</label>
+                  <p className="text-gray-900">{selectedOrder.username}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Email</label>
+                  <p className="text-gray-900">{selectedOrder.user_email}</p>
+                </div>
+                {(selectedOrder.first_name || selectedOrder.last_name) && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Full Name</label>
+                    <p className="text-gray-900">
+                      {[selectedOrder.first_name, selectedOrder.last_name].filter(Boolean).join(' ') || 'Not provided'}
+                    </p>
+                  </div>
+                )}
+                {selectedOrder.user_phone && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Phone</label>
+                    <p className="text-gray-900">{selectedOrder.user_phone}</p>
+                  </div>
+                )}
+                {selectedOrder.user_address && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Address</label>
+                    <p className="text-gray-900">{selectedOrder.user_address}</p>
+                  </div>
+                )}
+                {(selectedOrder.user_city || selectedOrder.user_country) && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Location</label>
+                    <p className="text-gray-900">
+                      {[selectedOrder.user_city, selectedOrder.user_country].filter(Boolean).join(', ') || 'Not provided'}
+                    </p>
+                  </div>
+                )}
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Order Total</label>
+                  <p className="text-lg font-bold text-orange-600">${selectedOrder.total_amount.toFixed(2)}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Order Date</label>
+                  <p className="text-gray-900">{new Date(selectedOrder.created_at).toLocaleDateString()}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Chat Modal */}
       {showChat && selectedOrder && (
