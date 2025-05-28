@@ -67,12 +67,21 @@ const CheckoutForm = ({ onBack }: CheckoutFormProps) => {
       return;
     }
 
+    if (items.length === 0) {
+      toast({
+        title: "Cart Empty",
+        description: "Please add items to your cart before checking out.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsProcessing(true);
 
     try {
       // Validate required fields
       const requiredFields = ['email', 'firstName', 'lastName', 'address', 'city', 'zipCode', 'phone'];
-      const missingFields = requiredFields.filter(field => !formData[field as keyof typeof formData]);
+      const missingFields = requiredFields.filter(field => !formData[field as keyof typeof formData]?.trim());
       
       if (missingFields.length > 0) {
         toast({
@@ -80,8 +89,11 @@ const CheckoutForm = ({ onBack }: CheckoutFormProps) => {
           description: "Please fill in all required fields.",
           variant: "destructive"
         });
+        setIsProcessing(false);
         return;
       }
+
+      console.log('Creating checkout session with items:', items);
 
       // Create checkout session
       const { data, error } = await supabase.functions.invoke('create-checkout', {
@@ -93,19 +105,24 @@ const CheckoutForm = ({ onBack }: CheckoutFormProps) => {
       });
 
       if (error) {
-        throw error;
+        console.error('Supabase function error:', error);
+        throw new Error(error.message || 'Failed to create checkout session');
       }
 
-      // Redirect to Stripe checkout
-      if (data?.url) {
-        window.location.href = data.url;
+      if (!data?.url) {
+        throw new Error('No checkout URL received from server');
       }
+
+      console.log('Checkout session created, redirecting to:', data.url);
+
+      // Redirect to Stripe checkout
+      window.location.href = data.url;
 
     } catch (error) {
       console.error('Checkout error:', error);
       toast({
         title: "Checkout Failed",
-        description: "There was an error starting the checkout process. Please try again.",
+        description: error instanceof Error ? error.message : "There was an error starting the checkout process. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -267,7 +284,7 @@ const CheckoutForm = ({ onBack }: CheckoutFormProps) => {
                 <Button
                   type="submit"
                   className="flex-1 bg-green-600 hover:bg-green-700"
-                  disabled={isProcessing}
+                  disabled={isProcessing || items.length === 0}
                 >
                   {isProcessing ? (
                     <>

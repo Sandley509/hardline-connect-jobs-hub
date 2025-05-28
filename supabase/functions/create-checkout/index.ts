@@ -15,12 +15,19 @@ serve(async (req) => {
   }
 
   try {
-    const { items, userEmail } = await req.json();
+    const { items, userEmail, userInfo } = await req.json();
     
-    // Initialize Stripe
+    console.log('Checkout request received:', { items, userEmail, userInfo });
+    
+    // Initialize Stripe with the secret key
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2023-10-16",
     });
+
+    // Validate that we have items
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      throw new Error("No items provided for checkout");
+    }
 
     // Create line items for Stripe
     const lineItems = items.map((item: any) => ({
@@ -40,6 +47,8 @@ serve(async (req) => {
       total + (item.price * item.quantity), 0
     );
 
+    console.log('Creating Stripe session with:', { lineItems, totalAmount });
+
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -51,8 +60,11 @@ serve(async (req) => {
       metadata: {
         total_amount: totalAmount.toString(),
         items: JSON.stringify(items),
+        user_info: userInfo ? JSON.stringify(userInfo) : "",
       },
     });
+
+    console.log('Stripe session created successfully:', session.id);
 
     return new Response(JSON.stringify({ url: session.url, sessionId: session.id }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -60,7 +72,10 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error("Stripe checkout error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ 
+      error: error.message,
+      details: "Failed to create checkout session. Please try again."
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });
