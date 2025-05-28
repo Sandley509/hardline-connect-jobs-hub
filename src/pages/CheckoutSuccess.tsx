@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import Layout from '@/components/Layout';
 import { CheckCircle, ArrowRight, ShoppingBag, Loader2 } from 'lucide-react';
@@ -48,21 +47,9 @@ const CheckoutSuccess = () => {
         await new Promise(resolve => setTimeout(resolve, 2000));
         
         // Check if order was created by looking for it in our database
-        const { data: order, error } = await supabase
+        const { data: orderData, error } = await supabase
           .from('orders')
-          .select(`
-            id,
-            total_amount,
-            status,
-            created_at,
-            order_items(
-              id,
-              product_name,
-              product_type,
-              price,
-              quantity
-            )
-          `)
+          .select('*')
           .eq('stripe_session_id', sessionId)
           .eq('user_id', user.id)
           .single();
@@ -86,8 +73,23 @@ const CheckoutSuccess = () => {
             }
           });
         } else {
-          setOrderDetails(order as OrderDetails);
-          console.log('Order found:', order);
+          // Fetch order items separately to avoid deep type inference
+          const { data: itemsData, error: itemsError } = await supabase
+            .from('order_items')
+            .select('*')
+            .eq('order_id', orderData.id);
+
+          if (!itemsError && itemsData) {
+            const completeOrder: OrderDetails = {
+              id: orderData.id,
+              total_amount: orderData.total_amount,
+              status: orderData.status,
+              created_at: orderData.created_at,
+              order_items: itemsData
+            };
+            setOrderDetails(completeOrder);
+            console.log('Order found:', completeOrder);
+          }
         }
 
         // Clear cart after successful payment verification
