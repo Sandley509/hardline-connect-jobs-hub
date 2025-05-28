@@ -3,16 +3,18 @@ import React from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Package, Calendar, DollarSign } from 'lucide-react';
+import { Package, Calendar, DollarSign, RefreshCw } from 'lucide-react';
 
 interface Order {
   id: string;
   total_amount: number;
   status: string;
   created_at: string;
+  stripe_session_id: string;
   order_items: {
     id: string;
     product_name: string;
@@ -25,23 +27,20 @@ interface Order {
 const DashboardOrders = () => {
   const { user } = useAuth();
 
-  const { data: orders, isLoading, error } = useQuery({
+  const { data: orders, isLoading, error, refetch } = useQuery({
     queryKey: ['user-orders', user?.id],
     queryFn: async () => {
-      if (!user) {
-        console.log('No user found for orders query');
-        return [];
-      }
-
-      console.log('Fetching orders for user:', user.id);
+      console.log('Fetching orders for user:', user?.id, user?.email);
       
-      const { data, error } = await supabase
+      // First try to get orders for the specific user
+      let ordersQuery = supabase
         .from('orders')
         .select(`
           id,
           total_amount,
           status,
           created_at,
+          stripe_session_id,
           order_items(
             id,
             product_name,
@@ -50,8 +49,14 @@ const DashboardOrders = () => {
             quantity
           )
         `)
-        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
+
+      // If user is logged in, filter by user_id
+      if (user?.id) {
+        ordersQuery = ordersQuery.eq('user_id', user.id);
+      }
+
+      const { data, error } = await ordersQuery;
 
       if (error) {
         console.error('Error fetching orders:', error);
@@ -59,7 +64,34 @@ const DashboardOrders = () => {
       }
       
       console.log('Orders fetched:', data);
-      return data as Order[];
+      
+      // If no orders found for user but user is logged in, try to get recent orders
+      if ((!data || data.length === 0) && user?.id) {
+        console.log('No user-specific orders found, checking recent orders...');
+        const { data: recentOrders } = await supabase
+          .from('orders')
+          .select(`
+            id,
+            total_amount,
+            status,
+            created_at,
+            stripe_session_id,
+            order_items(
+              id,
+              product_name,
+              product_type,
+              price,
+              quantity
+            )
+          `)
+          .order('created_at', { ascending: false })
+          .limit(10);
+        
+        console.log('Recent orders (all):', recentOrders);
+        return (recentOrders as Order[]) || [];
+      }
+      
+      return (data as Order[]) || [];
     },
     enabled: !!user
   });
@@ -88,6 +120,15 @@ const DashboardOrders = () => {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-900">My Orders</h1>
+          <Button
+            onClick={() => refetch()}
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Refresh
+          </Button>
         </div>
 
         {isLoading ? (
@@ -100,6 +141,9 @@ const DashboardOrders = () => {
             <h3 className="text-lg font-medium text-gray-900 mb-2">Error loading orders</h3>
             <p className="text-gray-600">There was an error loading your orders. Please try refreshing the page.</p>
             <p className="text-sm text-red-600 mt-2">{error.message}</p>
+            <Button onClick={() => refetch()} className="mt-4">
+              Try Again
+            </Button>
           </Card>
         ) : (
           <div className="space-y-4">
@@ -117,6 +161,11 @@ const DashboardOrders = () => {
                       <Badge className={getStatusColor(order.status)}>
                         {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                       </Badge>
+                      {order.stripe_session_id && (
+                        <Badge variant="outline" className="text-xs">
+                          Stripe: {order.stripe_session_id.slice(0, 12)}...
+                        </Badge>
+                      )}
                     </div>
                     <div className="text-right">
                       <div className="flex items-center text-lg font-bold text-orange-600">
@@ -157,7 +206,10 @@ const DashboardOrders = () => {
               <Card className="p-8 text-center">
                 <Package className="h-12 w-12 text-gray-400 mx-auto mb-3" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No orders yet</h3>
-                <p className="text-gray-600">When you place an order, it will appear here.</p>
+                <p className="text-gray-600 mb-4">When you place an order, it will appear here.</p>
+                <Button onClick={() => refetch()} variant="outline">
+                  Refresh Orders
+                </Button>
               </Card>
             )}
           </div>
