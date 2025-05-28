@@ -31,7 +31,8 @@ const Shop = () => {
       image: "/jabra.jpg",
       stripeProductId: "prod_headset_elite_456",
       features: ["Superior Audio Quality", "All-Day Comfort", "Quick Disconnect", "Warranty Included"],
-      description: "Premium headset with crystal-clear audio for professional communication."
+      description: "Premium headset with crystal-clear audio for professional communication.",
+      soldOut: true
     },
     {
       id: "headset-3",
@@ -40,7 +41,8 @@ const Shop = () => {
       image: "/spark06.jpg",
       stripeProductId: "prod_headset_essential_789",
       features: ["Crystal Clear Audio", "Lightweight Design","Noise cancellation", "Plug & Play", "Compatible with All Devices"],
-      description: "Budget-friendly option that doesn't compromise on quality."
+      description: "Budget-friendly option that doesn't compromise on quality.",
+      soldOut: true
     }
   ];
 
