@@ -13,7 +13,9 @@ import {
   Menu,
   X,
   Home,
-  BarChart3
+  BarChart3,
+  Package,
+  User
 } from "lucide-react";
 
 interface AdminLayoutProps {
@@ -33,7 +35,8 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
 
   const menuItems = [
     { path: '/admin/dashboard', icon: BarChart3, label: 'Dashboard' },
-    { path: '/admin/users', icon: Users, label: 'User Management' },
+    { path: '/admin/orders', icon: Package, label: 'Order Management' },
+    { path: '/admin/users', icon: User, label: 'User Management' },
     { path: '/admin/jobs', icon: Briefcase, label: 'Job Management' },
     { path: '/admin/notifications', icon: Bell, label: 'Notifications' },
   ];

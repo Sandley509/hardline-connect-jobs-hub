@@ -1,20 +1,21 @@
-
 import DashboardLayout from "@/components/DashboardLayout";
+import CustomerChat from "@/components/CustomerChat";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Package, Eye, Download, RefreshCw } from "lucide-react";
 
 const DashboardOrders = () => {
-  // Mock orders data
+  // Mock orders data with service orders
   const orders = [
     {
       id: "ORD-001",
       date: "2024-12-15",
       status: "delivered",
       total: 89.99,
+      hasServices: false,
       items: [
-        { name: "Logitech USB Headset", price: 89.99, quantity: 1 }
+        { name: "Logitech USB Headset", price: 89.99, quantity: 1, type: "product" }
       ]
     },
     {
@@ -22,9 +23,10 @@ const DashboardOrders = () => {
       date: "2024-12-10",
       status: "processing",
       total: 159.98,
+      hasServices: true,
       items: [
-        { name: "GL.iNet GL-AXT1800", price: 89.99, quantity: 1 },
-        { name: "GL.iNet GL-MT1300", price: 69.99, quantity: 1 }
+        { name: "VPN Setup Service", price: 89.99, quantity: 1, type: "service" },
+        { name: "GL.iNet GL-MT1300", price: 69.99, quantity: 1, type: "product" }
       ]
     },
     {
@@ -32,8 +34,9 @@ const DashboardOrders = () => {
       date: "2024-12-05",
       status: "shipped",
       total: 29.99,
+      hasServices: false,
       items: [
-        { name: "GL.iNet GL-MT300N-V2", price: 29.99, quantity: 1 }
+        { name: "GL.iNet GL-MT300N-V2", price: 29.99, quantity: 1, type: "product" }
       ]
     }
   ];
@@ -67,6 +70,8 @@ const DashboardOrders = () => {
         return '📦';
     }
   };
+
+  const serviceOrder = orders.find(order => order.hasServices && order.status !== "cancelled");
 
   return (
     <DashboardLayout>
@@ -188,6 +193,8 @@ const DashboardOrders = () => {
             </Button>
           </Card>
         )}
+
+        {serviceOrder && <CustomerChat orderId={serviceOrder.id} />}
       </div>
     </DashboardLayout>
   );
