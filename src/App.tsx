@@ -26,8 +26,32 @@ const queryClient = new QueryClient();
 
 // Protected Route Component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-600"></div>
+      </div>
+    );
+  }
+  
   return user ? <>{children}</> : <Navigate to="/login" replace />;
+};
+
+// Redirect authenticated users away from auth pages
+const AuthRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-600"></div>
+      </div>
+    );
+  }
+  
+  return user ? <Navigate to="/dashboard" replace /> : <>{children}</>;
 };
 
 const App = () => (
@@ -47,8 +71,18 @@ const App = () => (
               <Route path="/checkout-success" element={<CheckoutSuccess />} />
               <Route path="/shop" element={<Shop />} />
               <Route path="/services" element={<Services />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
+              
+              {/* Auth Routes - redirect to dashboard if already logged in */}
+              <Route path="/login" element={
+                <AuthRoute>
+                  <Login />
+                </AuthRoute>
+              } />
+              <Route path="/signup" element={
+                <AuthRoute>
+                  <Signup />
+                </AuthRoute>
+              } />
               
               {/* Protected Dashboard Routes */}
               <Route path="/dashboard" element={

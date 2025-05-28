@@ -7,10 +7,10 @@ import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
-import { Eye, EyeOff, Lock, User } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 
 const Login = () => {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -22,7 +22,7 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      const success = await login(username, password);
+      const success = await login(email, password);
       if (success) {
         toast({
           title: "Login Successful",
@@ -32,7 +32,7 @@ const Login = () => {
       } else {
         toast({
           title: "Login Failed",
-          description: "Invalid username or password. Please try again.",
+          description: "Invalid email or password. Please try again.",
           variant: "destructive",
         });
       }
@@ -68,18 +68,18 @@ const Login = () => {
           <div className="bg-white rounded-xl shadow-lg p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <Label htmlFor="username" className="text-gray-700 font-medium">
-                  Username
+                <Label htmlFor="email" className="text-gray-700 font-medium">
+                  Email Address
                 </Label>
                 <div className="mt-1 relative">
-                  <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                  <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                   <Input
-                    id="username"
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     className="pl-10 border-gray-300 focus:border-orange-500 focus:ring-orange-500"
-                    placeholder="Enter your username"
+                    placeholder="Enter your email"
                     required
                   />
                 </div>
@@ -139,13 +139,6 @@ const Login = () => {
                 </Link>
               </p>
             </div>
-          </div>
-
-          {/* Demo Credentials */}
-          <div className="bg-gray-100 rounded-lg p-4 text-center">
-            <p className="text-sm text-gray-600 mb-2">Demo Credentials:</p>
-            <p className="text-sm font-mono">Username: <strong>Sandley</strong></p>
-            <p className="text-sm font-mono">Password: <strong>Sawendjy1976@</strong></p>
           </div>
         </div>
       </div>

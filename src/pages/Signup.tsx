@@ -57,9 +57,9 @@ const Signup = () => {
       if (success) {
         toast({
           title: "Account Created",
-          description: "Welcome to Hardline Connect!",
+          description: "Please check your email to verify your account.",
         });
-        navigate('/dashboard');
+        navigate('/login');
       } else {
         toast({
           title: "Signup Failed",

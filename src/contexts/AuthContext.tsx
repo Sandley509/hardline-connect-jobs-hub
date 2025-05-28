@@ -1,18 +1,23 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { User, Session } from '@supabase/supabase-js';
 
-interface User {
+interface UserProfile {
+  id: string;
   username: string;
   email: string;
 }
 
 interface AuthContextType {
-  user: User | null;
-  login: (username: string, password: string) => Promise<boolean>;
+  user: UserProfile | null;
+  session: Session | null;
+  login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   signup: (username: string, email: string, password: string) => Promise<boolean>;
-  updateProfile: (data: Partial<User>) => void;
+  updateProfile: (data: Partial<UserProfile>) => void;
   changePassword: (currentPassword: string, newPassword: string) => Promise<boolean>;
+  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -26,67 +31,172 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Check for existing session on mount
   useEffect(() => {
-    const savedUser = localStorage.getItem('hardline_user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event, session);
+        setSession(session);
+        
+        if (session?.user) {
+          // Fetch user profile
+          setTimeout(async () => {
+            await fetchUserProfile(session.user);
+          }, 0);
+        } else {
+          setUser(null);
+        }
+        
+        setLoading(false);
+      }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session?.user) {
+        fetchUserProfile(session.user);
+      } else {
+        setLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const login = async (username: string, password: string): Promise<boolean> => {
-    // Hardcoded credentials for demo
-    if (username === 'Sandley' && password === 'Sawendjy1976@') {
-      const userData = {
-        username: 'Sandley',
-        email: 'sandley@hardlineconnect.com'
-      };
-      setUser(userData);
-      localStorage.setItem('hardline_user', JSON.stringify(userData));
-      return true;
+  const fetchUserProfile = async (authUser: User) => {
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authUser.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching profile:', error);
+        return;
+      }
+
+      if (profile) {
+        setUser({
+          id: profile.id,
+          username: profile.username || 'User',
+          email: authUser.email || ''
+        });
+      }
+    } catch (error) {
+      console.error('Error in fetchUserProfile:', error);
     }
-    return false;
+  };
+
+  const login = async (email: string, password: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
+        console.error('Login error:', error);
+        return false;
+      }
+
+      return !!data.user;
+    } catch (error) {
+      console.error('Login error:', error);
+      return false;
+    }
   };
 
   const signup = async (username: string, email: string, password: string): Promise<boolean> => {
-    // For demo purposes, allow any signup
-    const userData = {
-      username,
-      email
-    };
-    setUser(userData);
-    localStorage.setItem('hardline_user', JSON.stringify(userData));
-    return true;
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username: username
+          }
+        }
+      });
+
+      if (error) {
+        console.error('Signup error:', error);
+        return false;
+      }
+
+      return !!data.user;
+    } catch (error) {
+      console.error('Signup error:', error);
+      return false;
+    }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('hardline_user');
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      setSession(null);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
-  const updateProfile = (data: Partial<User>) => {
-    if (user) {
-      const updatedUser = { ...user, ...data };
-      setUser(updatedUser);
-      localStorage.setItem('hardline_user', JSON.stringify(updatedUser));
+  const updateProfile = async (data: Partial<UserProfile>) => {
+    if (!user || !session) return;
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          username: data.username,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+
+      if (error) {
+        console.error('Update profile error:', error);
+        return;
+      }
+
+      setUser(prev => prev ? { ...prev, ...data } : null);
+    } catch (error) {
+      console.error('Update profile error:', error);
     }
   };
 
   const changePassword = async (currentPassword: string, newPassword: string): Promise<boolean> => {
-    // For demo purposes, just return true
-    return true;
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) {
+        console.error('Change password error:', error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Change password error:', error);
+      return false;
+    }
   };
 
   return (
     <AuthContext.Provider value={{
       user,
+      session,
       login,
       logout,
       signup,
       updateProfile,
-      changePassword
+      changePassword,
+      loading
     }}>
       {children}
     </AuthContext.Provider>
