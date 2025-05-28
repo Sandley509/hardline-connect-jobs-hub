@@ -2,11 +2,13 @@
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { ChevronLeft, ChevronRight, ExternalLink, MapPin, Clock, DollarSign } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface JobLink {
-  id: number;
+  id: string;
   title: string;
   company: string;
   location: string;
@@ -18,52 +20,24 @@ interface JobLink {
 
 const Index = () => {
   const [currentPage, setCurrentPage] = useState(1);
-  const [jobLinks, setJobLinks] = useState<JobLink[]>([]);
   const itemsPerPage = 6;
 
-  useEffect(() => {
-    // Load job links from localStorage
-    const savedLinks = localStorage.getItem('jobLinks');
-    if (savedLinks) {
-      setJobLinks(JSON.parse(savedLinks));
-    } else {
-      // Default sample job links
-      const defaultJobs: JobLink[] = [
-        {
-          id: 1,
-          title: "Customer Service Representative",
-          company: "Remote Solutions Inc.",
-          location: "Remote - USA",
-          type: "Full-time",
-          salary: "$35,000 - $45,000",
-          url: "https://example.com/job1",
-          description: "Handle customer inquiries and provide excellent service via phone, email, and chat."
-        },
-        {
-          id: 2,
-          title: "Virtual Sales Associate",
-          company: "Digital Commerce Co.",
-          location: "Remote - USA",
-          type: "Part-time",
-          salary: "$15 - $20/hour",
-          url: "https://example.com/job2",
-          description: "Drive sales through online platforms and build relationships with customers."
-        },
-        {
-          id: 3,
-          title: "Data Entry Specialist",
-          company: "InfoTech Services",
-          location: "Remote - USA",
-          type: "Contract",
-          salary: "$18 - $22/hour",
-          url: "https://example.com/job3",
-          description: "Accurate data entry and management of digital records and databases."
-        }
-      ];
-      setJobLinks(defaultJobs);
-      localStorage.setItem('jobLinks', JSON.stringify(defaultJobs));
+  const { data: jobLinks = [], isLoading } = useQuery({
+    queryKey: ['jobs'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('jobs')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching jobs:', error);
+        return [];
+      }
+
+      return data || [];
     }
-  }, []);
+  });
 
   // Calculate pagination
   const totalPages = Math.ceil(jobLinks.length / itemsPerPage);
@@ -114,46 +88,67 @@ const Index = () => {
             </div>
 
             {/* Job Listings */}
-            <div className="space-y-4 md:space-y-6">
-              {currentJobs.map((job) => (
-                <Card key={job.id} className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-                  <CardHeader>
-                    <div className="flex flex-col md:flex-row md:justify-between md:items-start space-y-4 md:space-y-0">
-                      <div className="flex-1">
-                        <CardTitle className="text-lg md:text-xl text-teal-600 mb-2">
-                          {job.title}
-                        </CardTitle>
-                        <CardDescription className="text-base md:text-lg font-semibold text-gray-700">
-                          {job.company}
-                        </CardDescription>
+            {isLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
+              </div>
+            ) : (
+              <div className="space-y-4 md:space-y-6">
+                {currentJobs.map((job) => (
+                  <Card key={job.id} className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                    <CardHeader>
+                      <div className="flex flex-col md:flex-row md:justify-between md:items-start space-y-4 md:space-y-0">
+                        <div className="flex-1">
+                          <CardTitle className="text-lg md:text-xl text-teal-600 mb-2">
+                            {job.title}
+                          </CardTitle>
+                          <CardDescription className="text-base md:text-lg font-semibold text-gray-700">
+                            {job.company}
+                          </CardDescription>
+                        </div>
+                        <Button asChild className="bg-teal-600 hover:bg-teal-700 w-full md:w-auto">
+                          <a href={job.url} target="_blank" rel="noopener noreferrer">
+                            Apply Now <ExternalLink className="ml-2 h-4 w-4" />
+                          </a>
+                        </Button>
                       </div>
-                      <Button asChild className="bg-teal-600 hover:bg-teal-700 w-full md:w-auto">
-                        <a href={job.url} target="_blank" rel="noopener noreferrer">
-                          Apply Now <ExternalLink className="ml-2 h-4 w-4" />
-                        </a>
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-wrap gap-3 md:gap-4 mb-4">
-                      <div className="flex items-center text-gray-600 text-sm md:text-base">
-                        <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
-                        {job.location}
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-wrap gap-3 md:gap-4 mb-4">
+                        {job.location && (
+                          <div className="flex items-center text-gray-600 text-sm md:text-base">
+                            <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
+                            {job.location}
+                          </div>
+                        )}
+                        {job.type && (
+                          <div className="flex items-center text-gray-600 text-sm md:text-base">
+                            <Clock className="h-4 w-4 mr-1 flex-shrink-0" />
+                            {job.type}
+                          </div>
+                        )}
+                        {job.salary && (
+                          <div className="flex items-center text-green-600 font-semibold text-sm md:text-base">
+                            <DollarSign className="h-4 w-4 mr-1 flex-shrink-0" />
+                            {job.salary}
+                          </div>
+                        )}
                       </div>
-                      <div className="flex items-center text-gray-600 text-sm md:text-base">
-                        <Clock className="h-4 w-4 mr-1 flex-shrink-0" />
-                        {job.type}
-                      </div>
-                      <div className="flex items-center text-green-600 font-semibold text-sm md:text-base">
-                        <DollarSign className="h-4 w-4 mr-1 flex-shrink-0" />
-                        {job.salary}
-                      </div>
-                    </div>
-                    <p className="text-gray-700 text-sm md:text-base">{job.description}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                      {job.description && (
+                        <p className="text-gray-700 text-sm md:text-base">{job.description}</p>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+
+                {currentJobs.length === 0 && !isLoading && (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500 text-lg">No job listings available at the moment.</p>
+                    <p className="text-gray-400">Please check back later for new opportunities.</p>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Pagination */}
             {totalPages > 1 && (

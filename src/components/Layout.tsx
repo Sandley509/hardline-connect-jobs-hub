@@ -1,7 +1,7 @@
 
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, ShoppingCart, User, LogOut } from "lucide-react";
+import { Menu, X, ShoppingCart, User, LogOut, Shield } from "lucide-react";
 import { useState } from "react";
 import { useCart } from "@/contexts/CartContext";
 import CartModal from "@/components/CartModal";
@@ -15,7 +15,7 @@ const Layout = ({ children }: LayoutProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showCart, setShowCart] = useState(false);
   const { getTotalItems } = useCart();
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -93,6 +93,17 @@ const Layout = ({ children }: LayoutProps) => {
               {/* User Actions */}
               {user ? (
                 <div className="flex items-center space-x-2">
+                  {isAdmin && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => navigate('/admin/dashboard')}
+                      className="hover:bg-orange-50 text-orange-600"
+                    >
+                      <Shield className="h-4 w-4 mr-2" />
+                      Admin
+                    </Button>
+                  )}
                   <Button
                     variant="ghost"
                     size="sm"
@@ -203,6 +214,16 @@ const Layout = ({ children }: LayoutProps) => {
                 {/* Mobile User Actions */}
                 {user ? (
                   <div className="border-t border-gray-200 pt-4 mt-4">
+                    {isAdmin && (
+                      <Link 
+                        to="/admin/dashboard" 
+                        className="text-orange-600 hover:text-orange-700 transition-colors py-3 px-4 rounded-md hover:bg-orange-50 flex items-center"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <Shield className="h-5 w-5 mr-3" />
+                        Admin Panel
+                      </Link>
+                    )}
                     <Link 
                       to="/dashboard" 
                       className="text-gray-700 hover:text-orange-600 transition-colors py-3 px-4 rounded-md hover:bg-orange-50 flex items-center"

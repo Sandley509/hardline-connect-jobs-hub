@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { CartProvider } from "@/contexts/CartContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import AdminRoute from "@/components/AdminRoute";
 import Index from "./pages/Index";
 import IPPricing from "./pages/IPPricing";
 import Contact from "./pages/Contact";
@@ -20,6 +21,10 @@ import Dashboard from "./pages/Dashboard";
 import DashboardProfile from "./pages/DashboardProfile";
 import DashboardSettings from "./pages/DashboardSettings";
 import DashboardOrders from "./pages/DashboardOrders";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminUsers from "./pages/AdminUsers";
+import AdminJobs from "./pages/AdminJobs";
+import AdminNotifications from "./pages/AdminNotifications";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -104,6 +109,28 @@ const App = () => (
                 <ProtectedRoute>
                   <DashboardOrders />
                 </ProtectedRoute>
+              } />
+              
+              {/* Admin Routes - only accessible to admin users */}
+              <Route path="/admin/dashboard" element={
+                <AdminRoute>
+                  <AdminDashboard />
+                </AdminRoute>
+              } />
+              <Route path="/admin/users" element={
+                <AdminRoute>
+                  <AdminUsers />
+                </AdminRoute>
+              } />
+              <Route path="/admin/jobs" element={
+                <AdminRoute>
+                  <AdminJobs />
+                </AdminRoute>
+              } />
+              <Route path="/admin/notifications" element={
+                <AdminRoute>
+                  <AdminNotifications />
+                </AdminRoute>
               } />
               
               <Route path="*" element={<NotFound />} />

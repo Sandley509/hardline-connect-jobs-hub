@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
@@ -7,6 +6,7 @@ interface UserProfile {
   id: string;
   username: string;
   email: string;
+  role?: 'admin' | 'user';
 }
 
 interface AuthContextType {
@@ -17,6 +17,7 @@ interface AuthContextType {
   signup: (username: string, email: string, password: string) => Promise<boolean>;
   updateProfile: (data: Partial<UserProfile>) => void;
   changePassword: (currentPassword: string, newPassword: string) => Promise<boolean>;
+  isAdmin: boolean;
   loading: boolean;
 }
 
@@ -81,11 +82,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
+      // Check if user is admin
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', authUser.id)
+        .eq('role', 'admin')
+        .single();
+
       if (profile) {
         setUser({
           id: profile.id,
           username: profile.username || 'User',
-          email: authUser.email || ''
+          email: authUser.email || '',
+          role: roleData ? 'admin' : 'user'
         });
       }
     } catch (error) {
@@ -196,6 +206,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       signup,
       updateProfile,
       changePassword,
+      isAdmin: user?.role === 'admin',
       loading
     }}>
       {children}
