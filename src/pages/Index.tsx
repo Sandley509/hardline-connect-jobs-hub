@@ -86,48 +86,48 @@ const Index = () => {
   return (
     <Layout>
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-20">
+      <section className="bg-gradient-to-br from-teal-600 via-blue-600 to-purple-600 text-white py-16 md:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">
+          <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold mb-6 animate-fade-in">
             Find Your Perfect Work From Home Job
           </h1>
-          <p className="text-xl md:text-2xl mb-8">
+          <p className="text-lg md:text-xl lg:text-2xl mb-8 opacity-90 max-w-3xl mx-auto">
             Connect with remote opportunities in customer service, sales, and interpretation
           </p>
-          <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100">
+          <Button size="lg" className="bg-white text-teal-600 hover:bg-gray-100 text-lg px-8 py-3">
             Browse Opportunities
           </Button>
         </div>
       </section>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8">
           {/* Main Content */}
           <div className="lg:col-span-3">
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-3xl font-bold text-gray-800">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 md:mb-8 space-y-4 sm:space-y-0">
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-800">
                 Available Remote Positions
               </h2>
-              <p className="text-gray-600">
+              <p className="text-gray-600 text-sm md:text-base">
                 Page {currentPage} of {totalPages} ({jobLinks.length} total jobs)
               </p>
             </div>
 
             {/* Job Listings */}
-            <div className="space-y-6">
+            <div className="space-y-4 md:space-y-6">
               {currentJobs.map((job) => (
-                <Card key={job.id} className="hover:shadow-lg transition-shadow">
+                <Card key={job.id} className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                   <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="text-xl text-blue-600 mb-2">
+                    <div className="flex flex-col md:flex-row md:justify-between md:items-start space-y-4 md:space-y-0">
+                      <div className="flex-1">
+                        <CardTitle className="text-lg md:text-xl text-teal-600 mb-2">
                           {job.title}
                         </CardTitle>
-                        <CardDescription className="text-lg font-semibold text-gray-700">
+                        <CardDescription className="text-base md:text-lg font-semibold text-gray-700">
                           {job.company}
                         </CardDescription>
                       </div>
-                      <Button asChild>
+                      <Button asChild className="bg-teal-600 hover:bg-teal-700 w-full md:w-auto">
                         <a href={job.url} target="_blank" rel="noopener noreferrer">
                           Apply Now <ExternalLink className="ml-2 h-4 w-4" />
                         </a>
@@ -135,21 +135,21 @@ const Index = () => {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="flex flex-wrap gap-4 mb-4">
-                      <div className="flex items-center text-gray-600">
-                        <MapPin className="h-4 w-4 mr-1" />
+                    <div className="flex flex-wrap gap-3 md:gap-4 mb-4">
+                      <div className="flex items-center text-gray-600 text-sm md:text-base">
+                        <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
                         {job.location}
                       </div>
-                      <div className="flex items-center text-gray-600">
-                        <Clock className="h-4 w-4 mr-1" />
+                      <div className="flex items-center text-gray-600 text-sm md:text-base">
+                        <Clock className="h-4 w-4 mr-1 flex-shrink-0" />
                         {job.type}
                       </div>
-                      <div className="flex items-center text-green-600 font-semibold">
-                        <DollarSign className="h-4 w-4 mr-1" />
+                      <div className="flex items-center text-green-600 font-semibold text-sm md:text-base">
+                        <DollarSign className="h-4 w-4 mr-1 flex-shrink-0" />
                         {job.salary}
                       </div>
                     </div>
-                    <p className="text-gray-700">{job.description}</p>
+                    <p className="text-gray-700 text-sm md:text-base">{job.description}</p>
                   </CardContent>
                 </Card>
               ))}
@@ -157,23 +157,24 @@ const Index = () => {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex justify-center items-center space-x-4 mt-8">
+              <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4 mt-6 md:mt-8">
                 <Button
                   variant="outline"
                   onClick={prevPage}
                   disabled={currentPage === 1}
+                  className="w-full sm:w-auto"
                 >
                   <ChevronLeft className="h-4 w-4 mr-2" />
                   Previous
                 </Button>
                 
-                <div className="flex space-x-2">
+                <div className="flex space-x-2 overflow-x-auto">
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                     <Button
                       key={page}
                       variant={currentPage === page ? "default" : "outline"}
                       onClick={() => setCurrentPage(page)}
-                      className="w-10"
+                      className="w-10 h-10 flex-shrink-0"
                     >
                       {page}
                     </Button>
@@ -184,6 +185,7 @@ const Index = () => {
                   variant="outline"
                   onClick={nextPage}
                   disabled={currentPage === totalPages}
+                  className="w-full sm:w-auto"
                 >
                   Next
                   <ChevronRight className="h-4 w-4 ml-2" />
@@ -193,43 +195,50 @@ const Index = () => {
           </div>
 
           {/* Sidebar with Ads */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 order-first lg:order-last">
             <div className="space-y-6">
-              {/* Ad Space 1 */}
-              <Card className="bg-gradient-to-br from-green-400 to-blue-500 text-white">
+              {/* Business Services Ad */}
+              <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                <CardContent className="p-0">
+                  <img 
+                    src="/lovable-uploads/5df24894-f9e6-487b-af0a-38044f25840c.png" 
+                    alt="Start Your Business in the USA" 
+                    className="w-full h-auto object-cover"
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Website Referral Ad */}
+              <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                <CardContent className="p-0">
+                  <img 
+                    src="/lovable-uploads/8fb561d9-baff-41b0-97c0-8a25ddb61747.png" 
+                    alt="Get $200 Cash for Website Referrals" 
+                    className="w-full h-auto object-cover"
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Website Development Ad */}
+              <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                <CardContent className="p-0">
+                  <img 
+                    src="/lovable-uploads/50868bd1-dc05-4488-9f14-d891e7a5b688.png" 
+                    alt="Website Design & Development" 
+                    className="w-full h-auto object-cover"
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Contact CTA */}
+              <Card className="bg-gradient-to-br from-teal-500 to-blue-600 text-white">
                 <CardContent className="p-6 text-center">
-                  <h3 className="font-bold text-lg mb-2">Ad Space Available</h3>
-                  <p className="text-sm opacity-90">
-                    Promote your business here
+                  <h3 className="font-bold text-lg mb-2">Need Help?</h3>
+                  <p className="text-sm opacity-90 mb-4">
+                    Contact us for job assistance or business services
                   </p>
-                  <Button className="mt-4 bg-white text-green-600 hover:bg-gray-100">
+                  <Button className="bg-white text-teal-600 hover:bg-gray-100 w-full">
                     Contact Us
-                  </Button>
-                </CardContent>
-              </Card>
-
-              {/* Ad Space 2 */}
-              <Card className="bg-gradient-to-br from-purple-400 to-pink-500 text-white">
-                <CardContent className="p-6 text-center">
-                  <h3 className="font-bold text-lg mb-2">Featured Service</h3>
-                  <p className="text-sm opacity-90">
-                    Professional interpretation services
-                  </p>
-                  <Button className="mt-4 bg-white text-purple-600 hover:bg-gray-100">
-                    Learn More
-                  </Button>
-                </CardContent>
-              </Card>
-
-              {/* Ad Space 3 */}
-              <Card className="bg-gradient-to-br from-orange-400 to-red-500 text-white">
-                <CardContent className="p-6 text-center">
-                  <h3 className="font-bold text-lg mb-2">Premium Ad</h3>
-                  <p className="text-sm opacity-90">
-                    Reserve this spot for your ad
-                  </p>
-                  <Button className="mt-4 bg-white text-orange-600 hover:bg-gray-100">
-                    Get Started
                   </Button>
                 </CardContent>
               </Card>

@@ -1,3 +1,4 @@
+
 import Layout from "@/components/Layout";
 import ProductCard from "@/components/ProductCard";
 import { useState } from "react";
@@ -101,30 +102,30 @@ const Shop = () => {
       />
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-purple-600 to-blue-600 text-white py-20">
+      <section className="bg-gradient-to-br from-teal-600 via-purple-600 to-blue-600 text-white py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-fade-in">
+          <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold mb-6 animate-fade-in">
             Remote Work Equipment Store
           </h1>
-          <p className="text-xl md:text-2xl mb-8 opacity-90">
+          <p className="text-lg md:text-xl lg:text-2xl mb-8 opacity-90 max-w-3xl mx-auto">
             Professional headsets and reliable routers for your remote work setup
           </p>
         </div>
       </section>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
         {/* Headsets Section */}
-        <section className="mb-20">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4 flex items-center justify-center">
-              <Headphones className="h-8 w-8 mr-3 text-purple-600" />
+        <section className="mb-16 md:mb-20">
+          <div className="text-center mb-8 md:mb-12">
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-4 flex items-center justify-center">
+              <Headphones className="h-6 w-6 md:h-8 md:w-8 mr-3 text-purple-600" />
               Professional Headsets
             </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto">
               Crystal-clear audio quality for your video calls and remote meetings
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             {headsets.map((headset) => (
               <ProductCard
                 key={headset.id}
@@ -136,17 +137,17 @@ const Shop = () => {
         </section>
 
         {/* Routers Section */}
-        <section className="mb-20">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4 flex items-center justify-center">
-              <Router className="h-8 w-8 mr-3 text-blue-600" />
+        <section className="mb-16 md:mb-20">
+          <div className="text-center mb-8 md:mb-12">
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-4 flex items-center justify-center">
+              <Router className="h-6 w-6 md:h-8 md:w-8 mr-3 text-teal-600" />
               GL.iNet Routers
             </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto">
               Secure, reliable networking solutions for remote work and travel
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             {routers.map((router) => (
               <ProductCard
                 key={router.id}
@@ -158,24 +159,24 @@ const Shop = () => {
         </section>
 
         {/* CTA Section */}
-        <section className="text-center bg-gradient-to-r from-gray-50 to-blue-50 rounded-2xl p-12 shadow-lg">
-          <h3 className="text-3xl font-bold text-gray-800 mb-6">
+        <section className="text-center bg-gradient-to-r from-gray-50 to-teal-50 rounded-2xl p-8 md:p-12 shadow-lg">
+          <h3 className="text-2xl md:text-3xl font-bold text-gray-800 mb-6">
             Need Help Choosing?
           </h3>
-          <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
+          <p className="text-base md:text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
             Our experts are here to help you find the perfect equipment for your remote work setup. 
             Get personalized recommendations based on your specific needs.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button 
               onClick={() => navigate('/contact')}
-              className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              className="px-6 md:px-8 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium text-base md:text-lg"
             >
               Contact Support
             </button>
             <button 
               onClick={() => navigate('/services')}
-              className="px-8 py-3 border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-colors font-medium"
+              className="px-6 md:px-8 py-3 border-2 border-teal-600 text-teal-600 rounded-lg hover:bg-teal-600 hover:text-white transition-colors font-medium text-base md:text-lg"
             >
               View Services
             </button>
