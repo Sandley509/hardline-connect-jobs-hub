@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
@@ -117,7 +118,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         // Re-throw the error with more specific information for email confirmation issues
         if (error.message?.includes('Email not confirmed') || error.message?.includes('email_not_confirmed')) {
-          const enhancedError = new Error('Email not confirmed');
+          const enhancedError = new Error('Email not confirmed') as Error & { code: string };
           enhancedError.code = 'email_not_confirmed';
           throw enhancedError;
         }
