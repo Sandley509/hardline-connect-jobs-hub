@@ -25,93 +25,121 @@ const AdminUsers = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: users, isLoading } = useQuery({
+  const { data: users, isLoading, error } = useQuery({
     queryKey: ['admin-users'],
     queryFn: async () => {
-      console.log('Fetching non-admin users...');
+      console.log('Starting to fetch users...');
       
-      // First get admin user IDs
-      const { data: adminUsers } = await supabase
-        .from('user_roles')
-        .select('user_id')
-        .eq('role', 'admin');
+      try {
+        // First, get all profiles
+        const { data: allProfiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('*')
+          .order('created_at', { ascending: false });
 
-      const adminUserIds = adminUsers?.map(u => u.user_id) || [];
-      console.log('Admin user IDs:', adminUserIds);
+        if (profilesError) {
+          console.error('Error fetching profiles:', profilesError);
+          throw profilesError;
+        }
 
-      // Get non-admin profiles
-      let profilesQuery = supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
+        console.log('All profiles fetched:', allProfiles?.length || 0);
 
-      if (adminUserIds.length > 0) {
-        profilesQuery = profilesQuery.not('id', 'in', `(${adminUserIds.join(',')})`);
-      }
+        if (!allProfiles || allProfiles.length === 0) {
+          console.log('No profiles found in database');
+          return [];
+        }
 
-      const { data: profiles, error: profilesError } = await profilesQuery;
+        // Get admin user IDs separately
+        const { data: adminRoles, error: adminError } = await supabase
+          .from('user_roles')
+          .select('user_id')
+          .eq('role', 'admin');
 
-      if (profilesError) {
-        console.error('Error fetching profiles:', profilesError);
-        throw profilesError;
-      }
+        if (adminError) {
+          console.error('Error fetching admin roles:', adminError);
+          // Continue without filtering admins if this fails
+        }
 
-      console.log('Non-admin profiles fetched:', profiles);
+        const adminUserIds = adminRoles?.map(role => role.user_id) || [];
+        console.log('Admin user IDs:', adminUserIds);
 
-      if (!profiles || profiles.length === 0) {
-        return [];
-      }
-
-      // Get user profiles for additional info
-      const { data: userProfiles } = await supabase
-        .from('user_profiles')
-        .select('*');
-
-      // Get all user statuses in one query
-      const { data: userStatuses } = await supabase
-        .from('user_status')
-        .select('*');
-
-      // Get all orders in one query for counting
-      const { data: allOrders } = await supabase
-        .from('orders')
-        .select('user_id, total_amount');
-
-      // Process the data
-      const usersWithStatus = profiles.map((profile) => {
-        // Find user status
-        const status = userStatuses?.find(s => s.user_id === profile.id);
+        // Filter out admin users from profiles
+        const nonAdminProfiles = allProfiles.filter(profile => 
+          !adminUserIds.includes(profile.id)
+        );
         
-        // Find user profile for additional info
-        const userProfile = userProfiles?.find(up => up.user_id === profile.id);
+        console.log('Non-admin profiles:', nonAdminProfiles.length);
 
-        // Calculate order statistics
-        const userOrders = allOrders?.filter(order => order.user_id === profile.id) || [];
-        const orderCount = userOrders.length;
-        const totalSpent = userOrders.reduce((sum, order) => sum + parseFloat(order.total_amount.toString()), 0);
+        if (nonAdminProfiles.length === 0) {
+          console.log('No non-admin users found');
+          return [];
+        }
 
-        // Create email from username or use a placeholder
-        const email = userProfile?.first_name && userProfile?.last_name 
-          ? `${userProfile.first_name.toLowerCase()}.${userProfile.last_name.toLowerCase()}@example.com`
-          : `${profile.username || 'user'}@example.com`;
+        // Get additional user data in parallel
+        const [userStatusResponse, userProfilesResponse, ordersResponse] = await Promise.all([
+          supabase.from('user_status').select('*'),
+          supabase.from('user_profiles').select('*'),
+          supabase.from('orders').select('user_id, total_amount')
+        ]);
 
-        return {
-          ...profile,
-          email,
-          is_blocked: status?.is_blocked || false,
-          blocked_reason: status?.blocked_reason,
-          order_count: orderCount,
-          total_spent: totalSpent
-        };
-      });
+        const userStatuses = userStatusResponse.data || [];
+        const userProfiles = userProfilesResponse.data || [];
+        const allOrders = ordersResponse.data || [];
 
-      console.log('Processed non-admin users:', usersWithStatus);
-      return usersWithStatus;
+        console.log('Additional data fetched:', {
+          userStatuses: userStatuses.length,
+          userProfiles: userProfiles.length,
+          orders: allOrders.length
+        });
+
+        // Process and combine the data
+        const processedUsers = nonAdminProfiles.map((profile) => {
+          // Find user status
+          const status = userStatuses.find(s => s.user_id === profile.id);
+          
+          // Find user profile for additional info
+          const userProfile = userProfiles.find(up => up.user_id === profile.id);
+
+          // Calculate order statistics
+          const userOrders = allOrders.filter(order => order.user_id === profile.id);
+          const orderCount = userOrders.length;
+          const totalSpent = userOrders.reduce((sum, order) => {
+            const amount = parseFloat(order.total_amount?.toString() || '0');
+            return sum + (isNaN(amount) ? 0 : amount);
+          }, 0);
+
+          // Create email from username or profile info
+          let email = `${profile.username || 'user'}@example.com`;
+          if (userProfile?.first_name && userProfile?.last_name) {
+            email = `${userProfile.first_name.toLowerCase()}.${userProfile.last_name.toLowerCase()}@example.com`;
+          }
+
+          return {
+            id: profile.id,
+            username: profile.username || 'Unknown User',
+            email,
+            created_at: profile.created_at,
+            is_blocked: status?.is_blocked || false,
+            blocked_reason: status?.blocked_reason || null,
+            order_count: orderCount,
+            total_spent: totalSpent
+          };
+        });
+
+        console.log('Final processed users:', processedUsers.length);
+        return processedUsers;
+
+      } catch (error) {
+        console.error('Error in user query:', error);
+        throw error;
+      }
     }
   });
 
   const blockUserMutation = useMutation({
     mutationFn: async ({ userId, reason }: { userId: string; reason: string }) => {
+      console.log('Blocking user:', userId, 'Reason:', reason);
+      
       const { data: currentUser } = await supabase.auth.getUser();
       const { error } = await supabase
         .from('user_status')
@@ -123,7 +151,10 @@ const AdminUsers = () => {
           blocked_by: currentUser.user?.id
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Block user error:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
@@ -144,6 +175,8 @@ const AdminUsers = () => {
 
   const unblockUserMutation = useMutation({
     mutationFn: async (userId: string) => {
+      console.log('Unblocking user:', userId);
+      
       const { error } = await supabase
         .from('user_status')
         .upsert({
@@ -154,7 +187,10 @@ const AdminUsers = () => {
           blocked_by: null
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Unblock user error:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
@@ -175,23 +211,14 @@ const AdminUsers = () => {
 
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: string) => {
-      // Delete user status first
-      await supabase
-        .from('user_status')
-        .delete()
-        .eq('user_id', userId);
-
-      // Delete user profiles
-      await supabase
-        .from('user_profiles')
-        .delete()
-        .eq('user_id', userId);
-
-      // Delete user roles
-      await supabase
-        .from('user_roles')
-        .delete()
-        .eq('user_id', userId);
+      console.log('Deleting user:', userId);
+      
+      // Delete related data first to avoid foreign key constraints
+      await Promise.all([
+        supabase.from('user_status').delete().eq('user_id', userId),
+        supabase.from('user_profiles').delete().eq('user_id', userId),
+        supabase.from('user_roles').delete().eq('user_id', userId)
+      ]);
 
       // Finally delete the profile
       const { error } = await supabase
@@ -199,7 +226,10 @@ const AdminUsers = () => {
         .delete()
         .eq('id', userId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Delete user error:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
@@ -237,6 +267,11 @@ const AdminUsers = () => {
     }
   };
 
+  // Show error state if there's an error
+  if (error) {
+    console.error('Query error:', error);
+  }
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -259,6 +294,16 @@ const AdminUsers = () => {
           {isLoading ? (
             <div className="flex justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
+            </div>
+          ) : error ? (
+            <div className="text-center py-8">
+              <p className="text-red-600">Error loading users: {error.message}</p>
+              <Button 
+                onClick={() => queryClient.invalidateQueries({ queryKey: ['admin-users'] })}
+                className="mt-4"
+              >
+                Retry
+              </Button>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -284,7 +329,7 @@ const AdminUsers = () => {
                               {user.username?.charAt(0).toUpperCase() || 'U'}
                             </span>
                           </div>
-                          <span className="font-medium text-gray-900">{user.username || 'Unknown'}</span>
+                          <span className="font-medium text-gray-900">{user.username}</span>
                         </div>
                       </td>
                       <td className="py-3 px-4 text-gray-600">{user.email}</td>
@@ -341,7 +386,7 @@ const AdminUsers = () => {
                           <Button
                             size="sm"
                             variant="destructive"
-                            onClick={() => handleDeleteUser(user.id, user.username || 'Unknown')}
+                            onClick={() => handleDeleteUser(user.id, user.username)}
                             disabled={deleteUserMutation.isPending}
                           >
                             Delete
@@ -353,9 +398,9 @@ const AdminUsers = () => {
                 </tbody>
               </table>
 
-              {(!filteredUsers || filteredUsers.length === 0) && !isLoading && (
+              {(!filteredUsers || filteredUsers.length === 0) && !isLoading && !error && (
                 <div className="text-center py-8">
-                  <p className="text-gray-500">No users found. Make sure users have signed up and created profiles.</p>
+                  <p className="text-gray-500">No users found. Users will appear here once they sign up and create profiles.</p>
                 </div>
               )}
             </div>
