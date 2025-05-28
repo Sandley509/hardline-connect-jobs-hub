@@ -1,4 +1,3 @@
-
 import Layout from "@/components/Layout";
 import ProductCard from "@/components/ProductCard";
 import { useState } from "react";
@@ -88,11 +87,6 @@ const Shop = () => {
     });
   };
 
-  const handleCheckout = () => {
-    console.log('Navigating to checkout from shop page');
-    navigate('/checkout');
-  };
-
   return (
     <Layout>
       {/* Fixed Cart Icon */}
@@ -104,7 +98,6 @@ const Shop = () => {
       <CartModal
         isOpen={showCart}
         onClose={() => setShowCart(false)}
-        onCheckout={handleCheckout}
       />
 
       {/* Hero Section */}

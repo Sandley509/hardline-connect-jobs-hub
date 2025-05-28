@@ -10,6 +10,7 @@ import IPPricing from "./pages/IPPricing";
 import Contact from "./pages/Contact";
 import AdminLinks from "./pages/AdminLinks";
 import Checkout from "./pages/Checkout";
+import CheckoutSuccess from "./pages/CheckoutSuccess";
 import Shop from "./pages/Shop";
 import Services from "./pages/Services";
 import NotFound from "./pages/NotFound";
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/contact" element={<Contact />} />
             <Route path="/admin" element={<AdminLinks />} />
             <Route path="/checkout" element={<Checkout />} />
+            <Route path="/checkout-success" element={<CheckoutSuccess />} />
             <Route path="/shop" element={<Shop />} />
             <Route path="/services" element={<Services />} />
             <Route path="*" element={<NotFound />} />

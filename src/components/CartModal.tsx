@@ -4,20 +4,25 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Minus, Plus, Trash2 } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
+import { useNavigate } from 'react-router-dom';
 
 interface CartModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCheckout: () => void;
+  onCheckout?: () => void;
 }
 
 const CartModal = ({ isOpen, onClose, onCheckout }: CartModalProps) => {
   const { items, updateQuantity, removeItem, getTotalPrice } = useCart();
+  const navigate = useNavigate();
 
   const handleCheckout = () => {
-    console.log('Checkout button clicked, redirecting...');
+    console.log('CartModal: Checkout button clicked, navigating to /checkout');
     onClose();
-    onCheckout();
+    navigate('/checkout');
+    if (onCheckout) {
+      onCheckout();
+    }
   };
 
   return (
@@ -76,7 +81,7 @@ const CartModal = ({ isOpen, onClose, onCheckout }: CartModalProps) => {
                 <Button variant="outline" onClick={onClose} className="flex-1">
                   Continue Shopping
                 </Button>
-                <Button onClick={handleCheckout} className="flex-1">
+                <Button onClick={handleCheckout} className="flex-1 bg-blue-600 hover:bg-blue-700">
                   Proceed to Checkout
                 </Button>
               </div>
