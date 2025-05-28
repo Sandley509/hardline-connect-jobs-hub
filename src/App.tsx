@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,6 +15,7 @@ import Checkout from "./pages/Checkout";
 import CheckoutSuccess from "./pages/CheckoutSuccess";
 import Shop from "./pages/Shop";
 import Services from "./pages/Services";
+import Blog from "./pages/Blog";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
@@ -25,6 +27,7 @@ import AdminUsers from "./pages/AdminUsers";
 import AdminJobs from "./pages/AdminJobs";
 import AdminNotifications from "./pages/AdminNotifications";
 import AdminOrders from "./pages/AdminOrders";
+import AdminBlog from "./pages/AdminBlog";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -81,6 +84,7 @@ const App = () => (
               <Route path="/checkout-success" element={<CheckoutSuccess />} />
               <Route path="/shop" element={<Shop />} />
               <Route path="/services" element={<Services />} />
+              <Route path="/blog" element={<Blog />} />
               
               {/* Auth Routes - redirect to dashboard if already logged in */}
               <Route path="/login" element={
@@ -135,6 +139,11 @@ const App = () => (
               <Route path="/admin/jobs" element={
                 <AdminRoute>
                   <AdminJobs />
+                </AdminRoute>
+              } />
+              <Route path="/admin/blog" element={
+                <AdminRoute>
+                  <AdminBlog />
                 </AdminRoute>
               } />
               <Route path="/admin/notifications" element={

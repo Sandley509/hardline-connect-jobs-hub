@@ -63,14 +63,12 @@ const Layout = ({ children }: LayoutProps) => {
               <Link to="/services" className="text-gray-700 hover:text-orange-600 transition-colors py-2 px-3 rounded-md hover:bg-orange-50">
                 Services
               </Link>
+              <Link to="/blog" className="text-gray-700 hover:text-orange-600 transition-colors py-2 px-3 rounded-md hover:bg-orange-50">
+                Blog
+              </Link>
               <Link to="/contact" className="text-gray-700 hover:text-orange-600 transition-colors py-2 px-3 rounded-md hover:bg-orange-50">
                 Contact
               </Link>
-              {!user && (
-                <Link to="/admin" className="text-gray-700 hover:text-orange-600 transition-colors py-2 px-3 rounded-md hover:bg-orange-50">
-                  Admin
-                </Link>
-              )}
             </nav>
 
             {/* Desktop Actions */}
@@ -204,6 +202,13 @@ const Layout = ({ children }: LayoutProps) => {
                   Services
                 </Link>
                 <Link 
+                  to="/blog" 
+                  className="text-gray-700 hover:text-orange-600 transition-colors py-3 px-4 rounded-md hover:bg-orange-50 block"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Blog
+                </Link>
+                <Link 
                   to="/contact" 
                   className="text-gray-700 hover:text-orange-600 transition-colors py-3 px-4 rounded-md hover:bg-orange-50 block"
                   onClick={() => setIsMobileMenuOpen(false)}
@@ -258,13 +263,6 @@ const Layout = ({ children }: LayoutProps) => {
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       Sign Up
-                    </Link>
-                    <Link 
-                      to="/admin" 
-                      className="text-gray-700 hover:text-orange-600 transition-colors py-3 px-4 rounded-md hover:bg-orange-50 block"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      Admin
                     </Link>
                   </div>
                 )}

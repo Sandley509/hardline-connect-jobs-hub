@@ -8,6 +8,7 @@ interface UserProfile {
   username: string;
   email: string;
   role?: 'admin' | 'user';
+  created_at?: string;
 }
 
 interface AuthContextType {
@@ -96,7 +97,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           id: profile.id,
           username: profile.username || 'User',
           email: authUser.email || '',
-          role: adminCheck ? 'admin' : 'user'
+          role: adminCheck ? 'admin' : 'user',
+          created_at: profile.created_at
         });
       }
     } catch (error) {

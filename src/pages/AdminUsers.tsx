@@ -1,3 +1,4 @@
+
 import AdminLayout from "@/components/AdminLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,24 +28,42 @@ const AdminUsers = () => {
   const { data: users, isLoading } = useQuery({
     queryKey: ['admin-users'],
     queryFn: async () => {
-      console.log('Fetching users...');
+      console.log('Fetching non-admin users...');
       
-      // Get all profiles
-      const { data: profiles, error: profilesError } = await supabase
+      // First get admin user IDs
+      const { data: adminUsers } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'admin');
+
+      const adminUserIds = adminUsers?.map(u => u.user_id) || [];
+      console.log('Admin user IDs:', adminUserIds);
+
+      // Get non-admin profiles
+      let profilesQuery = supabase
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false });
+
+      if (adminUserIds.length > 0) {
+        profilesQuery = profilesQuery.not('id', 'in', `(${adminUserIds.join(',')})`);
+      }
+
+      const { data: profiles, error: profilesError } = await profilesQuery;
 
       if (profilesError) {
         console.error('Error fetching profiles:', profilesError);
         throw profilesError;
       }
 
-      console.log('Profiles fetched:', profiles);
+      console.log('Non-admin profiles fetched:', profiles);
 
       if (!profiles || profiles.length === 0) {
         return [];
       }
+
+      // Get user emails from auth metadata
+      const { data: authUsers } = await supabase.auth.admin.listUsers();
 
       // Get all user statuses in one query
       const { data: userStatuses } = await supabase
@@ -60,6 +79,9 @@ const AdminUsers = () => {
       const usersWithStatus = profiles.map((profile) => {
         // Find user status
         const status = userStatuses?.find(s => s.user_id === profile.id);
+        
+        // Find auth user for email
+        const authUser = authUsers?.users?.find(u => u.id === profile.id);
 
         // Calculate order statistics
         const userOrders = allOrders?.filter(order => order.user_id === profile.id) || [];
@@ -68,7 +90,7 @@ const AdminUsers = () => {
 
         return {
           ...profile,
-          email: `user-${profile.id.slice(0, 8)}@example.com`,
+          email: authUser?.email || `user-${profile.id.slice(0, 8)}@example.com`,
           is_blocked: status?.is_blocked || false,
           blocked_reason: status?.blocked_reason,
           order_count: orderCount,
@@ -76,7 +98,7 @@ const AdminUsers = () => {
         };
       });
 
-      console.log('Processed users:', usersWithStatus);
+      console.log('Processed non-admin users:', usersWithStatus);
       return usersWithStatus;
     }
   });

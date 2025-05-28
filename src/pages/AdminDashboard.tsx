@@ -14,8 +14,22 @@ const AdminDashboard = () => {
   const { data: stats } = useQuery({
     queryKey: ['admin-stats'],
     queryFn: async () => {
-      const [usersResult, jobsResult, notificationsResult, ordersResult] = await Promise.all([
-        supabase.from('profiles').select('id', { count: 'exact' }),
+      // Get non-admin users count by checking user_roles table
+      const { data: adminUsers } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'admin');
+
+      const adminUserIds = adminUsers?.map(u => u.user_id) || [];
+
+      // Get total users excluding admins
+      let usersQuery = supabase.from('profiles').select('id', { count: 'exact' });
+      if (adminUserIds.length > 0) {
+        usersQuery = usersQuery.not('id', 'in', `(${adminUserIds.join(',')})`);
+      }
+      const usersResult = await usersQuery;
+
+      const [jobsResult, notificationsResult, ordersResult] = await Promise.all([
         supabase.from('jobs').select('id', { count: 'exact' }),
         supabase.from('notifications').select('id', { count: 'exact' }),
         supabase.from('orders').select('id', { count: 'exact' })
@@ -88,7 +102,7 @@ const AdminDashboard = () => {
 
   const adminStats = [
     {
-      title: "Total Users",
+      title: "Total Customers",
       value: stats?.totalUsers || 0,
       icon: Users,
       color: "text-blue-600",
