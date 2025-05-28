@@ -25,20 +25,29 @@ serve(async (req) => {
     // For now, we'll process without webhook verification since it requires endpoint setup
     const event = JSON.parse(body);
     
+    console.log('Received webhook event:', event.type);
+    
     if (event.type === "checkout.session.completed") {
       const session = event.data.object;
+      
+      console.log('Processing checkout session:', session.id);
       
       // Get session details from Stripe
       const fullSession = await stripe.checkout.sessions.retrieve(session.id, {
         expand: ['line_items'],
       });
       
-      const items = JSON.parse(session.metadata.items || '[]');
-      const totalAmount = parseFloat(session.metadata.total_amount || '0');
+      const items = JSON.parse(session.metadata?.items || '[]');
+      const totalAmount = parseFloat(session.metadata?.total_amount || '0');
+      const userInfo = session.metadata?.user_info ? JSON.parse(session.metadata.user_info) : null;
+      
+      console.log('Session details:', { items, totalAmount, userInfo });
       
       // Find user by email
-      const { data: user } = await supabase.auth.admin.listUsers();
-      const matchedUser = user.users.find(u => u.email === session.customer_email);
+      const { data: authUsers } = await supabase.auth.admin.listUsers();
+      const matchedUser = authUsers.users.find(u => u.email === session.customer_email);
+      
+      console.log('Found user:', matchedUser?.id);
       
       // Create order
       const { data: order, error: orderError } = await supabase
@@ -57,21 +66,27 @@ serve(async (req) => {
         return new Response("Order creation failed", { status: 500 });
       }
 
+      console.log('Order created:', order.id);
+
       // Create order items
-      const orderItems = items.map((item: any) => ({
-        order_id: order.id,
-        product_name: item.name,
-        product_type: item.category,
-        price: item.price,
-        quantity: item.quantity
-      }));
+      if (items && items.length > 0) {
+        const orderItems = items.map((item: any) => ({
+          order_id: order.id,
+          product_name: item.name,
+          product_type: item.category,
+          price: item.price,
+          quantity: item.quantity
+        }));
 
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems);
+        const { error: itemsError } = await supabase
+          .from('order_items')
+          .insert(orderItems);
 
-      if (itemsError) {
-        console.error('Order items error:', itemsError);
+        if (itemsError) {
+          console.error('Order items error:', itemsError);
+        } else {
+          console.log('Order items created successfully');
+        }
       }
 
       // Create notification for admin
@@ -96,6 +111,9 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error("Webhook error:", error);
-    return new Response("Webhook error", { status: 400 });
+    return new Response(JSON.stringify({ error: error.message }), {
+      headers: { "Content-Type": "application/json" },
+      status: 400,
+    });
   }
 });

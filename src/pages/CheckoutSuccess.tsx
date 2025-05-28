@@ -6,10 +6,12 @@ import { Button } from '@/components/ui/button';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useCart } from '@/contexts/CartContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 const CheckoutSuccess = () => {
   const navigate = useNavigate();
   const { clearCart } = useCart();
+  const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const [isVerifying, setIsVerifying] = useState(true);
   const [orderDetails, setOrderDetails] = useState<any>(null);
@@ -18,30 +20,61 @@ const CheckoutSuccess = () => {
 
   useEffect(() => {
     const verifyPayment = async () => {
-      if (!sessionId) {
+      if (!sessionId || !user) {
         setIsVerifying(false);
         return;
       }
 
       try {
-        // Simulate webhook processing by calling it directly
-        await supabase.functions.invoke('stripe-webhook', {
-          body: {
-            type: 'checkout.session.completed',
-            data: {
-              object: {
-                id: sessionId,
-                customer_email: 'customer@example.com', // This would come from Stripe
-                metadata: {
-                  total_amount: '0', // This would come from Stripe
-                  items: '[]' // This would come from Stripe
+        console.log('Verifying payment for session:', sessionId);
+        
+        // Wait a moment for webhook to process
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Check if order was created by looking for it in our database
+        const { data: order, error } = await supabase
+          .from('orders')
+          .select(`
+            id,
+            total_amount,
+            status,
+            created_at,
+            order_items(
+              id,
+              product_name,
+              product_type,
+              price,
+              quantity
+            )
+          `)
+          .eq('stripe_session_id', sessionId)
+          .eq('user_id', user.id)
+          .single();
+
+        if (error) {
+          console.error('Error fetching order:', error);
+          // If no order found, trigger webhook manually
+          await supabase.functions.invoke('stripe-webhook', {
+            body: {
+              type: 'checkout.session.completed',
+              data: {
+                object: {
+                  id: sessionId,
+                  customer_email: user.email,
+                  metadata: {
+                    total_amount: '0',
+                    items: '[]'
+                  }
                 }
               }
             }
-          }
-        });
+          });
+        } else {
+          setOrderDetails(order);
+          console.log('Order found:', order);
+        }
 
-        // Clear cart after successful payment
+        // Clear cart after successful payment verification
         clearCart();
         setIsVerifying(false);
       } catch (error) {
@@ -51,7 +84,7 @@ const CheckoutSuccess = () => {
     };
 
     verifyPayment();
-  }, [sessionId, clearCart]);
+  }, [sessionId, clearCart, user]);
 
   if (isVerifying) {
     return (
@@ -62,10 +95,10 @@ const CheckoutSuccess = () => {
               <Loader2 className="h-12 w-12 text-blue-600 animate-spin" />
             </div>
             <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              Verifying Payment...
+              Processing Your Order...
             </h1>
             <p className="text-xl text-gray-600 mb-8">
-              Please wait while we confirm your payment.
+              Please wait while we confirm your payment and create your order.
             </p>
           </div>
         </div>
@@ -88,6 +121,32 @@ const CheckoutSuccess = () => {
           <p className="text-xl text-gray-600 mb-8">
             Thank you for your purchase. Your order has been successfully processed.
           </p>
+          
+          {orderDetails && (
+            <div className="bg-gray-50 rounded-lg p-6 mb-8 text-left">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Order Details</h2>
+              <div className="space-y-2">
+                <p><strong>Order ID:</strong> #{orderDetails.id.slice(0, 8)}</p>
+                <p><strong>Total:</strong> ${orderDetails.total_amount.toFixed(2)}</p>
+                <p><strong>Status:</strong> {orderDetails.status}</p>
+                <p><strong>Date:</strong> {new Date(orderDetails.created_at).toLocaleDateString()}</p>
+              </div>
+              
+              {orderDetails.order_items && orderDetails.order_items.length > 0 && (
+                <div className="mt-4">
+                  <h3 className="font-medium text-gray-900 mb-2">Items:</h3>
+                  <div className="space-y-1">
+                    {orderDetails.order_items.map((item: any) => (
+                      <div key={item.id} className="flex justify-between text-sm">
+                        <span>{item.product_name} x{item.quantity}</span>
+                        <span>${(item.price * item.quantity).toFixed(2)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
           
           <div className="bg-gray-50 rounded-lg p-6 mb-8">
             <h2 className="text-lg font-semibold text-gray-900 mb-2">What's Next?</h2>
