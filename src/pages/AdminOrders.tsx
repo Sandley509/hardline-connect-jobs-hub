@@ -1,4 +1,3 @@
-
 import AdminLayout from "@/components/AdminLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,7 +28,8 @@ const AdminOrders = () => {
   const { data: orders, isLoading } = useQuery({
     queryKey: ['admin-orders'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First get orders with order items
+      const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
         .select(`
           id,
@@ -37,22 +37,34 @@ const AdminOrders = () => {
           total_amount,
           status,
           created_at,
-          profiles(username),
           order_items(*)
         `)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (ordersError) throw ordersError;
 
-      return data?.map(order => ({
-        order_id: order.id,
-        user_id: order.user_id,
-        username: order.profiles?.username || 'Unknown',
-        total_amount: order.total_amount,
-        status: order.status,
-        created_at: order.created_at,
-        items: order.order_items || []
-      })) || [];
+      // Then get user profiles for each order
+      const ordersWithProfiles = await Promise.all(
+        (ordersData || []).map(async (order) => {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('username')
+            .eq('id', order.user_id)
+            .single();
+
+          return {
+            order_id: order.id,
+            user_id: order.user_id,
+            username: profile?.username || 'Unknown',
+            total_amount: order.total_amount,
+            status: order.status,
+            created_at: order.created_at,
+            items: order.order_items || []
+          };
+        })
+      );
+
+      return ordersWithProfiles;
     }
   });
 

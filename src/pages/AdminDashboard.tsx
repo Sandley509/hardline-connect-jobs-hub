@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
-import { users, Briefcase, Bell, Shield, Package } from "lucide-react";
+import { Users, Briefcase, Bell, Shield, Package } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const AdminDashboard = () => {
