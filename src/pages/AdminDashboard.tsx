@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
 import { Users, Briefcase, Bell, Shield, Package } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import ActiveUsersList from "@/components/admin/ActiveUsersList";
 
 const AdminDashboard = () => {
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
@@ -164,8 +165,8 @@ const AdminDashboard = () => {
           })}
         </div>
 
-        {/* Dashboard Content */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Dashboard Content - Updated layout to include Active Users */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Recent Orders */}
           <Card className="p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Orders</h3>
@@ -195,6 +196,9 @@ const AdminDashboard = () => {
               )}
             </div>
           </Card>
+
+          {/* Active Users - NEW SECTION */}
+          <ActiveUsersList />
 
           {/* System Status */}
           <Card className="p-6">
