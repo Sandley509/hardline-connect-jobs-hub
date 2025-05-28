@@ -14,9 +14,7 @@ interface BlogPost {
   author_id: string;
   published: boolean;
   slug: string;
-  profiles?: {
-    username: string;
-  };
+  author_username?: string;
 }
 
 const Blog = () => {
@@ -25,15 +23,30 @@ const Blog = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('blog_posts')
-        .select(`
-          *,
-          profiles(username)
-        `)
+        .select('*')
         .eq('published', true)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as BlogPost[];
+
+      if (!data || data.length === 0) {
+        return [];
+      }
+
+      // Get author details separately
+      const authorIds = [...new Set(data.map(post => post.author_id))];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, username')
+        .in('id', authorIds);
+
+      // Combine data
+      const postsWithAuthors = data.map(post => ({
+        ...post,
+        author_username: profiles?.find(p => p.id === post.author_id)?.username || 'Admin'
+      }));
+
+      return postsWithAuthors as BlogPost[];
     }
   });
 
@@ -65,7 +78,7 @@ const Blog = () => {
                     <div className="flex items-center space-x-4 text-sm text-gray-500">
                       <div className="flex items-center">
                         <User className="h-4 w-4 mr-1" />
-                        <span>{post.profiles?.username || 'Admin'}</span>
+                        <span>{post.author_username}</span>
                       </div>
                       <div className="flex items-center">
                         <Calendar className="h-4 w-4 mr-1" />

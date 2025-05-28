@@ -62,8 +62,9 @@ const AdminUsers = () => {
         return [];
       }
 
-      // Get user emails from auth metadata
-      const { data: authUsers } = await supabase.auth.admin.listUsers();
+      // Get user emails from auth metadata - get all users first
+      const { data: authData } = await supabase.auth.admin.listUsers();
+      const authUsers = authData?.users || [];
 
       // Get all user statuses in one query
       const { data: userStatuses } = await supabase
@@ -81,7 +82,7 @@ const AdminUsers = () => {
         const status = userStatuses?.find(s => s.user_id === profile.id);
         
         // Find auth user for email
-        const authUser = authUsers?.users?.find(u => u.id === profile.id);
+        const authUser = authUsers.find(u => u.id === profile.id);
 
         // Calculate order statistics
         const userOrders = allOrders?.filter(order => order.user_id === profile.id) || [];
@@ -105,6 +106,7 @@ const AdminUsers = () => {
 
   const blockUserMutation = useMutation({
     mutationFn: async ({ userId, reason }: { userId: string; reason: string }) => {
+      const { data: currentUser } = await supabase.auth.getUser();
       const { error } = await supabase
         .from('user_status')
         .upsert({
@@ -112,7 +114,7 @@ const AdminUsers = () => {
           is_blocked: true,
           blocked_reason: reason,
           blocked_at: new Date().toISOString(),
-          blocked_by: (await supabase.auth.getUser()).data.user?.id
+          blocked_by: currentUser.user?.id
         });
 
       if (error) throw error;
