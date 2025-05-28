@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,7 +17,7 @@ interface CheckoutFormProps {
 
 const CheckoutForm = ({ onBack }: CheckoutFormProps) => {
   const { items, getTotalPrice, clearCart } = useCart();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [isProcessing, setIsProcessing] = useState(false);
   const [formData, setFormData] = useState({
@@ -30,6 +30,25 @@ const CheckoutForm = ({ onBack }: CheckoutFormProps) => {
     phone: ''
   });
 
+  // Redirect to login if user is not authenticated
+  useEffect(() => {
+    if (!loading && !user) {
+      toast({
+        title: "Login Required",
+        description: "Please login or create an account to complete your purchase.",
+        variant: "destructive"
+      });
+      navigate('/login');
+    }
+  }, [user, loading, navigate]);
+
+  // Update email when user is loaded
+  useEffect(() => {
+    if (user?.email) {
+      setFormData(prev => ({ ...prev, email: user.email }));
+    }
+  }, [user]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
@@ -37,6 +56,17 @@ const CheckoutForm = ({ onBack }: CheckoutFormProps) => {
 
   const handleStripeCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please login to complete your purchase.",
+        variant: "destructive"
+      });
+      navigate('/login');
+      return;
+    }
+
     setIsProcessing(true);
 
     try {
@@ -82,6 +112,20 @@ const CheckoutForm = ({ onBack }: CheckoutFormProps) => {
       setIsProcessing(false);
     }
   };
+
+  // Show loading while checking authentication
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-16">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  // Don't render if user is not authenticated (will redirect)
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -154,6 +198,8 @@ const CheckoutForm = ({ onBack }: CheckoutFormProps) => {
                   value={formData.email}
                   onChange={handleInputChange}
                   required
+                  disabled
+                  className="bg-gray-100"
                 />
               </div>
 
