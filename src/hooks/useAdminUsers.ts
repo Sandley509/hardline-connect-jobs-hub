@@ -23,108 +23,161 @@ export const useAdminUsers = () => {
     queryFn: async () => {
       console.log('Fetching all users for admin...');
       
-      // Get current user
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      console.log('Current admin user ID:', currentUser?.id);
+      try {
+        // Get current user
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        console.log('Current admin user ID:', currentUser?.id);
 
-      // Get ALL profiles first
-      const { data: allProfiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
+        // Get ALL profiles first
+        const { data: allProfiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('*')
+          .order('created_at', { ascending: false });
 
-      if (profilesError) {
-        console.error('Error fetching profiles:', profilesError);
-        throw profilesError;
+        if (profilesError) {
+          console.error('Error fetching profiles:', profilesError);
+          throw profilesError;
+        }
+
+        console.log('Total profiles found:', allProfiles?.length || 0);
+
+        if (!allProfiles || allProfiles.length === 0) {
+          console.log('No profiles found in database');
+          return [];
+        }
+
+        // Get admin users to exclude them
+        const { data: adminRoles, error: rolesError } = await supabase
+          .from('user_roles')
+          .select('user_id')
+          .eq('role', 'admin');
+
+        if (rolesError) {
+          console.error('Error fetching admin roles:', rolesError);
+          // Continue without admin filtering if this fails
+        }
+
+        console.log('Admin roles found:', adminRoles?.length || 0);
+        const adminUserIds = adminRoles?.map(role => role.user_id) || [];
+        console.log('Admin user IDs:', adminUserIds);
+
+        // Get user status data (with error handling)
+        let userStatuses = [];
+        try {
+          const { data, error } = await supabase.from('user_status').select('*');
+          if (error) {
+            console.error('Error fetching user statuses:', error);
+          } else {
+            userStatuses = data || [];
+          }
+        } catch (err) {
+          console.error('Failed to fetch user statuses:', err);
+        }
+
+        // Get user profiles data (with error handling)
+        let userProfiles = [];
+        try {
+          const { data, error } = await supabase.from('user_profiles').select('*');
+          if (error) {
+            console.error('Error fetching user profiles:', error);
+          } else {
+            userProfiles = data || [];
+          }
+        } catch (err) {
+          console.error('Failed to fetch user profiles:', err);
+        }
+
+        // Get orders data (with error handling)
+        let allOrders = [];
+        try {
+          const { data, error } = await supabase.from('orders').select('user_id, total_amount');
+          if (error) {
+            console.error('Error fetching orders:', error);
+          } else {
+            allOrders = data || [];
+          }
+        } catch (err) {
+          console.error('Failed to fetch orders:', err);
+        }
+
+        console.log('User statuses found:', userStatuses.length);
+        console.log('User profiles found:', userProfiles.length);
+        console.log('Orders found:', allOrders.length);
+
+        // Process all profiles and only exclude current user and confirmed admins
+        const processedUsers: UserProfile[] = allProfiles
+          .filter(profile => {
+            // Exclude current user
+            if (profile.id === currentUser?.id) {
+              console.log('Excluding current user:', profile.id);
+              return false;
+            }
+            
+            // Only exclude if we confirmed they are admin
+            if (adminUserIds.includes(profile.id)) {
+              console.log('Excluding confirmed admin user:', profile.id);
+              return false;
+            }
+            
+            console.log('Including user:', profile.id, profile.username);
+            return true;
+          })
+          .map((profile) => {
+            try {
+              const status = userStatuses.find(s => s.user_id === profile.id);
+              const userProfile = userProfiles.find(up => up.user_id === profile.id);
+              const userOrders = allOrders.filter(order => order.user_id === profile.id) || [];
+              
+              const orderCount = userOrders.length;
+              const totalSpent = userOrders.reduce((sum, order) => {
+                const amount = parseFloat(order.total_amount?.toString() || '0');
+                return sum + (isNaN(amount) ? 0 : amount);
+              }, 0);
+
+              // Generate email based on available data
+              let email = profile.username ? `${profile.username}@example.com` : `user${profile.id.slice(0, 8)}@example.com`;
+              if (userProfile?.first_name && userProfile?.last_name) {
+                email = `${userProfile.first_name.toLowerCase()}.${userProfile.last_name.toLowerCase()}@example.com`;
+              }
+
+              const processedUser = {
+                id: profile.id,
+                username: profile.username || `User_${profile.id.slice(0, 8)}`,
+                email,
+                created_at: profile.created_at,
+                is_blocked: status?.is_blocked || false,
+                blocked_reason: status?.blocked_reason || null,
+                order_count: orderCount,
+                total_spent: totalSpent,
+                is_admin: false
+              };
+
+              console.log('Processed user:', processedUser);
+              return processedUser;
+            } catch (err) {
+              console.error('Error processing user:', profile.id, err);
+              // Return a basic user object even if processing fails
+              return {
+                id: profile.id,
+                username: profile.username || `User_${profile.id.slice(0, 8)}`,
+                email: profile.username ? `${profile.username}@example.com` : `user${profile.id.slice(0, 8)}@example.com`,
+                created_at: profile.created_at,
+                is_blocked: false,
+                blocked_reason: null,
+                order_count: 0,
+                total_spent: 0,
+                is_admin: false
+              };
+            }
+          });
+
+        console.log('Final processed users count:', processedUsers.length);
+        console.log('Final processed users:', processedUsers);
+        return processedUsers;
+      } catch (error) {
+        console.error('Critical error in useAdminUsers:', error);
+        throw error;
       }
-
-      console.log('Total profiles found:', allProfiles?.length || 0);
-
-      if (!allProfiles || allProfiles.length === 0) {
-        console.log('No profiles found in database');
-        return [];
-      }
-
-      // Get admin users to exclude them
-      const { data: adminRoles } = await supabase
-        .from('user_roles')
-        .select('user_id')
-        .eq('role', 'admin');
-
-      console.log('Admin roles found:', adminRoles?.length || 0);
-      const adminUserIds = adminRoles?.map(role => role.user_id) || [];
-      console.log('Admin user IDs:', adminUserIds);
-
-      // Get user status data
-      const { data: userStatuses } = await supabase
-        .from('user_status')
-        .select('*');
-
-      // Get user profiles data for additional info
-      const { data: userProfiles } = await supabase
-        .from('user_profiles')
-        .select('*');
-
-      // Get orders data
-      const { data: allOrders } = await supabase
-        .from('orders')
-        .select('user_id, total_amount');
-
-      console.log('User statuses found:', userStatuses?.length || 0);
-      console.log('User profiles found:', userProfiles?.length || 0);
-      console.log('Orders found:', allOrders?.length || 0);
-
-      // Process all profiles and only exclude current user and admins
-      const processedUsers: UserProfile[] = allProfiles
-        .filter(profile => {
-          // Exclude current user
-          if (profile.id === currentUser?.id) {
-            console.log('Excluding current user:', profile.id);
-            return false;
-          }
-          
-          // Exclude admin users
-          if (adminUserIds.includes(profile.id)) {
-            console.log('Excluding admin user:', profile.id);
-            return false;
-          }
-          
-          console.log('Including user:', profile.id, profile.username);
-          return true;
-        })
-        .map((profile) => {
-          const status = userStatuses?.find(s => s.user_id === profile.id);
-          const userProfile = userProfiles?.find(up => up.user_id === profile.id);
-          const userOrders = allOrders?.filter(order => order.user_id === profile.id) || [];
-          
-          const orderCount = userOrders.length;
-          const totalSpent = userOrders.reduce((sum, order) => {
-            const amount = parseFloat(order.total_amount?.toString() || '0');
-            return sum + (isNaN(amount) ? 0 : amount);
-          }, 0);
-
-          // Generate email based on available data
-          let email = profile.username ? `${profile.username}@example.com` : `user${profile.id.slice(0, 8)}@example.com`;
-          if (userProfile?.first_name && userProfile?.last_name) {
-            email = `${userProfile.first_name.toLowerCase()}.${userProfile.last_name.toLowerCase()}@example.com`;
-          }
-
-          return {
-            id: profile.id,
-            username: profile.username || `User_${profile.id.slice(0, 8)}`,
-            email,
-            created_at: profile.created_at,
-            is_blocked: status?.is_blocked || false,
-            blocked_reason: status?.blocked_reason || null,
-            order_count: orderCount,
-            total_spent: totalSpent,
-            is_admin: false
-          };
-        });
-
-      console.log('Final processed users count:', processedUsers.length);
-      console.log('Final processed users:', processedUsers);
-      return processedUsers;
     }
   });
 
