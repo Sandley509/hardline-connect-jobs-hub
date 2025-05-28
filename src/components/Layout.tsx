@@ -1,10 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingCart, User, LogOut } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import CartIcon from './CartIcon';
+import CartModal from './CartModal';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -12,11 +13,12 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   const { getTotalItems } = useCart();
-  const { user, signOut } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   const handleSignOut = async () => {
-    await signOut();
+    await logout();
     navigate('/');
   };
 
@@ -49,7 +51,7 @@ const Layout = ({ children }: LayoutProps) => {
             </div>
             
             <div className="flex items-center space-x-4">
-              <CartIcon />
+              <CartIcon onClick={() => setIsCartOpen(true)} />
               
               {user ? (
                 <div className="flex items-center space-x-4">
@@ -90,6 +92,8 @@ const Layout = ({ children }: LayoutProps) => {
       </nav>
       
       <main>{children}</main>
+      
+      <CartModal isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </div>
   );
 };
