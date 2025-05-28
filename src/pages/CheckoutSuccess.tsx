@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import Layout from '@/components/Layout';
 import { CheckCircle, ArrowRight, ShoppingBag, Loader2 } from 'lucide-react';
@@ -21,27 +22,6 @@ interface OrderDetails {
   status: string;
   created_at: string;
   order_items: OrderItem[];
-}
-
-// Define the raw database types to avoid TypeScript inference issues
-interface RawOrder {
-  id: string;
-  total_amount: number;
-  status: string;
-  created_at: string;
-  user_id: string;
-  updated_at: string;
-  stripe_session_id?: string;
-}
-
-interface RawOrderItem {
-  id: string;
-  order_id: string;
-  product_name: string;
-  product_type: string;
-  price: number;
-  quantity: number;
-  created_at: string;
 }
 
 const CheckoutSuccess = () => {
@@ -68,15 +48,15 @@ const CheckoutSuccess = () => {
         await new Promise(resolve => setTimeout(resolve, 2000));
         
         // Check if order was created by looking for it in our database
-        const { data: orderData, error } = await supabase
+        const orderQuery = await supabase
           .from('orders')
           .select('*')
           .eq('stripe_session_id', sessionId)
           .eq('user_id', user.id)
-          .single() as { data: RawOrder | null; error: any };
+          .maybeSingle();
 
-        if (error) {
-          console.error('Error fetching order:', error);
+        if (orderQuery.error) {
+          console.error('Error fetching order:', orderQuery.error);
           // If no order found, trigger webhook manually
           await supabase.functions.invoke('stripe-webhook', {
             body: {
@@ -93,20 +73,20 @@ const CheckoutSuccess = () => {
               }
             }
           });
-        } else if (orderData) {
-          // Fetch order items separately to avoid deep type inference
-          const { data: itemsData, error: itemsError } = await supabase
+        } else if (orderQuery.data) {
+          // Fetch order items separately
+          const itemsQuery = await supabase
             .from('order_items')
             .select('*')
-            .eq('order_id', orderData.id) as { data: RawOrderItem[] | null; error: any };
+            .eq('order_id', orderQuery.data.id);
 
-          if (!itemsError && itemsData) {
+          if (!itemsQuery.error && itemsQuery.data) {
             const completeOrder: OrderDetails = {
-              id: orderData.id,
-              total_amount: orderData.total_amount,
-              status: orderData.status,
-              created_at: orderData.created_at,
-              order_items: itemsData
+              id: orderQuery.data.id,
+              total_amount: orderQuery.data.total_amount,
+              status: orderQuery.data.status,
+              created_at: orderQuery.data.created_at,
+              order_items: itemsQuery.data
             };
             setOrderDetails(completeOrder);
             console.log('Order found:', completeOrder);
