@@ -1,4 +1,3 @@
-
 import Layout from "@/components/Layout";
 import ProductCard from "@/components/ProductCard";
 import { useState } from "react";
@@ -22,7 +21,8 @@ const Shop = () => {
       image: "/logitech.webp",
       stripeProductId: "prod_headset_pro_123",
       features: ["Noise Cancellation", "USB Connection", "Comfortable Padding", "Adjustable Microphone"],
-      description: "Professional-grade headset perfect for remote work and video calls."
+      description: "Professional-grade headset perfect for remote work and video calls.",
+      soldOut: true
     },
     {
       id: "headset-2",
@@ -75,6 +75,15 @@ const Shop = () => {
   ];
 
   const handleAddToCart = (item: any, category: 'headset' | 'router') => {
+    if (item.soldOut) {
+      toast({
+        title: "Out of Stock",
+        description: `${item.name} is currently sold out.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    
     addItem({
       id: item.id,
       name: item.name,

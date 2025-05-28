@@ -11,6 +11,7 @@ interface Product {
   image: string;
   features: string[];
   description?: string;
+  soldOut?: boolean;
 }
 
 interface ProductCardProps {
@@ -20,7 +21,7 @@ interface ProductCardProps {
 
 const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
   return (
-    <Card className="group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border-0 shadow-lg overflow-hidden">
+    <Card className={`group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border-0 shadow-lg overflow-hidden ${product.soldOut ? 'opacity-75' : ''}`}>
       <CardHeader className="p-0">
         <div className="relative overflow-hidden">
           <img 
@@ -30,6 +31,13 @@ const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
             loading="lazy"
           />
           <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300" />
+          {product.soldOut && (
+            <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+              <div className="bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-lg">
+                SOLD OUT
+              </div>
+            </div>
+          )}
         </div>
         <div className="p-6 pb-2">
           <CardTitle className="text-xl font-bold text-gray-800 mb-2 line-clamp-2">
@@ -65,11 +73,22 @@ const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
           ))}
         </div>
         <Button 
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 transition-all duration-200 transform hover:scale-105" 
+          className={`w-full font-medium py-3 transition-all duration-200 ${
+            product.soldOut 
+              ? 'bg-gray-400 text-gray-600 cursor-not-allowed hover:bg-gray-400 hover:scale-100' 
+              : 'bg-blue-600 hover:bg-blue-700 text-white transform hover:scale-105'
+          }`}
           onClick={onAddToCart}
+          disabled={product.soldOut}
         >
-          <ShoppingCart className="h-4 w-4 mr-2" />
-          Add to Cart
+          {product.soldOut ? (
+            'Out of Stock'
+          ) : (
+            <>
+              <ShoppingCart className="h-4 w-4 mr-2" />
+              Add to Cart
+            </>
+          )}
         </Button>
       </CardContent>
     </Card>
