@@ -69,7 +69,7 @@ serve(async (req) => {
 
     console.log('Creating Stripe session with:', { lineItems, totalAmount });
 
-    // Create Stripe checkout session with webhook configuration
+    // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: lineItems,
@@ -83,8 +83,6 @@ serve(async (req) => {
         user_info: userInfo ? JSON.stringify(userInfo) : "",
         origin: origin,
       },
-      // Configure webhook endpoint - this is crucial for order creation
-      webhook_endpoint: `https://xndzcnzpjdzexmcrotcz.supabase.co/functions/v1/stripe-webhook`,
     });
 
     console.log('Stripe session created successfully:', session.id);
