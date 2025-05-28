@@ -1,3 +1,4 @@
+
 import DashboardLayout from "@/components/DashboardLayout";
 import AdminRedirect from "@/components/AdminRedirect";
 import { Card } from "@/components/ui/card";
@@ -21,19 +22,29 @@ const Dashboard = () => {
   const { user } = useAuth();
   const { items, getTotalPrice, getTotalItems } = useCart();
   const [orderCount, setOrderCount] = useState(0);
+  const [totalSpent, setTotalSpent] = useState(0);
   const [memberSince, setMemberSince] = useState<string>("");
 
   useEffect(() => {
     const fetchUserData = async () => {
       if (!user) return;
 
-      // Fetch real order count
-      const { data: orders } = await supabase
+      console.log('Fetching dashboard data for user:', user.id);
+
+      // Fetch real order count and total spent
+      const { data: orders, error } = await supabase
         .from('orders')
-        .select('id')
+        .select('id, total_amount')
         .eq('user_id', user.id);
       
-      setOrderCount(orders?.length || 0);
+      if (error) {
+        console.error('Error fetching orders for dashboard:', error);
+      } else {
+        console.log('Dashboard orders fetched:', orders);
+        setOrderCount(orders?.length || 0);
+        const total = orders?.reduce((sum, order) => sum + Number(order.total_amount), 0) || 0;
+        setTotalSpent(total);
+      }
 
       // Get member since date from auth user
       const { data: authData } = await supabase.auth.getUser();
@@ -72,8 +83,8 @@ const Dashboard = () => {
       bgColor: "bg-orange-100"
     },
     {
-      title: "Account Status",
-      value: "Active",
+      title: "Total Spent",
+      value: `$${totalSpent.toFixed(2)}`,
       icon: Star,
       color: "text-purple-600",
       bgColor: "bg-purple-100"
@@ -241,6 +252,10 @@ const Dashboard = () => {
                 <div>
                   <label className="text-sm font-medium text-gray-600">Total Orders</label>
                   <p className="text-gray-900">{orderCount}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-600">Total Spent</label>
+                  <p className="text-gray-900">${totalSpent.toFixed(2)}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-600">Account Status</label>

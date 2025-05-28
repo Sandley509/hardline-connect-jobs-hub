@@ -25,11 +25,16 @@ interface Order {
 const DashboardOrders = () => {
   const { user } = useAuth();
 
-  const { data: orders, isLoading } = useQuery({
+  const { data: orders, isLoading, error } = useQuery({
     queryKey: ['user-orders', user?.id],
     queryFn: async () => {
-      if (!user) return [];
+      if (!user) {
+        console.log('No user found for orders query');
+        return [];
+      }
 
+      console.log('Fetching orders for user:', user.id);
+      
       const { data, error } = await supabase
         .from('orders')
         .select(`
@@ -48,7 +53,12 @@ const DashboardOrders = () => {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching orders:', error);
+        throw error;
+      }
+      
+      console.log('Orders fetched:', data);
       return data as Order[];
     },
     enabled: !!user
@@ -69,6 +79,10 @@ const DashboardOrders = () => {
     }
   };
 
+  if (error) {
+    console.error('Orders query error:', error);
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -80,6 +94,13 @@ const DashboardOrders = () => {
           <div className="flex justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
           </div>
+        ) : error ? (
+          <Card className="p-8 text-center">
+            <Package className="h-12 w-12 text-red-400 mx-auto mb-3" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Error loading orders</h3>
+            <p className="text-gray-600">There was an error loading your orders. Please try refreshing the page.</p>
+            <p className="text-sm text-red-600 mt-2">{error.message}</p>
+          </Card>
         ) : (
           <div className="space-y-4">
             {orders && orders.length > 0 ? (
@@ -111,20 +132,24 @@ const DashboardOrders = () => {
 
                   <div className="space-y-2">
                     <h4 className="font-medium text-gray-900">Items:</h4>
-                    {order.order_items.map((item) => (
-                      <div key={item.id} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
-                        <div className="flex items-center space-x-2">
-                          <span className="font-medium text-gray-900">{item.product_name}</span>
-                          <Badge variant="outline" className={item.product_type === 'service' ? 'text-purple-600' : 'text-blue-600'}>
-                            {item.product_type}
-                          </Badge>
-                          <span className="text-gray-600">x{item.quantity}</span>
+                    {order.order_items && order.order_items.length > 0 ? (
+                      order.order_items.map((item) => (
+                        <div key={item.id} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
+                          <div className="flex items-center space-x-2">
+                            <span className="font-medium text-gray-900">{item.product_name}</span>
+                            <Badge variant="outline" className={item.product_type === 'service' ? 'text-purple-600' : 'text-blue-600'}>
+                              {item.product_type}
+                            </Badge>
+                            <span className="text-gray-600">x{item.quantity}</span>
+                          </div>
+                          <span className="font-medium text-gray-900">
+                            ${(item.price * item.quantity).toFixed(2)}
+                          </span>
                         </div>
-                        <span className="font-medium text-gray-900">
-                          ${(item.price * item.quantity).toFixed(2)}
-                        </span>
-                      </div>
-                    ))}
+                      ))
+                    ) : (
+                      <p className="text-gray-500 text-sm">No items found for this order</p>
+                    )}
                   </div>
                 </Card>
               ))
