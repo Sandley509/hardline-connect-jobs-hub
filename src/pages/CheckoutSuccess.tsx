@@ -8,13 +8,29 @@ import { useCart } from '@/contexts/CartContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
+interface OrderItem {
+  id: string;
+  product_name: string;
+  product_type: string;
+  price: number;
+  quantity: number;
+}
+
+interface OrderDetails {
+  id: string;
+  total_amount: number;
+  status: string;
+  created_at: string;
+  order_items: OrderItem[];
+}
+
 const CheckoutSuccess = () => {
   const navigate = useNavigate();
   const { clearCart } = useCart();
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const [isVerifying, setIsVerifying] = useState(true);
-  const [orderDetails, setOrderDetails] = useState<any>(null);
+  const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
   
   const sessionId = searchParams.get('session_id');
 
@@ -70,7 +86,7 @@ const CheckoutSuccess = () => {
             }
           });
         } else {
-          setOrderDetails(order);
+          setOrderDetails(order as OrderDetails);
           console.log('Order found:', order);
         }
 
@@ -136,7 +152,7 @@ const CheckoutSuccess = () => {
                 <div className="mt-4">
                   <h3 className="font-medium text-gray-900 mb-2">Items:</h3>
                   <div className="space-y-1">
-                    {orderDetails.order_items.map((item: any) => (
+                    {orderDetails.order_items.map((item) => (
                       <div key={item.id} className="flex justify-between text-sm">
                         <span>{item.product_name} x{item.quantity}</span>
                         <span>${(item.price * item.quantity).toFixed(2)}</span>
