@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -24,11 +23,11 @@ export const useAdminUsers = () => {
     queryFn: async () => {
       console.log('Fetching all users for admin...');
       
-      // Get current user to exclude from results
+      // Get current user
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       console.log('Current admin user ID:', currentUser?.id);
 
-      // First, get ALL profiles without any filtering
+      // Get ALL profiles first
       const { data: allProfiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
@@ -40,42 +39,42 @@ export const useAdminUsers = () => {
       }
 
       console.log('Total profiles found:', allProfiles?.length || 0);
-      console.log('All profiles:', allProfiles);
 
       if (!allProfiles || allProfiles.length === 0) {
         console.log('No profiles found in database');
         return [];
       }
 
-      // Get user roles to identify admins
-      const { data: userRoles, error: rolesError } = await supabase
+      // Get admin users to exclude them
+      const { data: adminRoles } = await supabase
         .from('user_roles')
-        .select('user_id, role');
+        .select('user_id')
+        .eq('role', 'admin');
 
-      if (rolesError) {
-        console.error('Error fetching user roles:', rolesError);
-        // Continue without roles if there's an error
-      }
+      console.log('Admin roles found:', adminRoles?.length || 0);
+      const adminUserIds = adminRoles?.map(role => role.user_id) || [];
+      console.log('Admin user IDs:', adminUserIds);
 
-      console.log('User roles found:', userRoles?.length || 0);
-      console.log('User roles data:', userRoles);
+      // Get user status data
+      const { data: userStatuses } = await supabase
+        .from('user_status')
+        .select('*');
 
-      // Get additional data in parallel
-      const [userStatusResponse, userProfilesResponse, ordersResponse] = await Promise.all([
-        supabase.from('user_status').select('*'),
-        supabase.from('user_profiles').select('*'),
-        supabase.from('orders').select('user_id, total_amount')
-      ]);
+      // Get user profiles data for additional info
+      const { data: userProfiles } = await supabase
+        .from('user_profiles')
+        .select('*');
 
-      const userStatuses = userStatusResponse.data || [];
-      const userProfiles = userProfilesResponse.data || [];
-      const allOrders = ordersResponse.data || [];
+      // Get orders data
+      const { data: allOrders } = await supabase
+        .from('orders')
+        .select('user_id, total_amount');
 
-      console.log('User statuses found:', userStatuses.length);
-      console.log('User profiles found:', userProfiles.length);
-      console.log('Orders found:', allOrders.length);
+      console.log('User statuses found:', userStatuses?.length || 0);
+      console.log('User profiles found:', userProfiles?.length || 0);
+      console.log('Orders found:', allOrders?.length || 0);
 
-      // Process users and filter out admins and current user
+      // Process all profiles and only exclude current user and admins
       const processedUsers: UserProfile[] = allProfiles
         .filter(profile => {
           // Exclude current user
@@ -84,23 +83,19 @@ export const useAdminUsers = () => {
             return false;
           }
           
-          // Check if user is admin
-          const isAdmin = userRoles?.some(role => 
-            role.user_id === profile.id && role.role === 'admin'
-          ) || false;
-          
-          if (isAdmin) {
+          // Exclude admin users
+          if (adminUserIds.includes(profile.id)) {
             console.log('Excluding admin user:', profile.id);
             return false;
           }
           
-          console.log('Including regular user:', profile.id, profile.username);
+          console.log('Including user:', profile.id, profile.username);
           return true;
         })
         .map((profile) => {
-          const status = userStatuses.find(s => s.user_id === profile.id);
-          const userProfile = userProfiles.find(up => up.user_id === profile.id);
-          const userOrders = allOrders.filter(order => order.user_id === profile.id);
+          const status = userStatuses?.find(s => s.user_id === profile.id);
+          const userProfile = userProfiles?.find(up => up.user_id === profile.id);
+          const userOrders = allOrders?.filter(order => order.user_id === profile.id) || [];
           
           const orderCount = userOrders.length;
           const totalSpent = userOrders.reduce((sum, order) => {
@@ -109,14 +104,14 @@ export const useAdminUsers = () => {
           }, 0);
 
           // Generate email based on available data
-          let email = `${profile.username || 'user'}@example.com`;
+          let email = profile.username ? `${profile.username}@example.com` : `user${profile.id.slice(0, 8)}@example.com`;
           if (userProfile?.first_name && userProfile?.last_name) {
             email = `${userProfile.first_name.toLowerCase()}.${userProfile.last_name.toLowerCase()}@example.com`;
           }
 
           return {
             id: profile.id,
-            username: profile.username || 'Unknown User',
+            username: profile.username || `User_${profile.id.slice(0, 8)}`,
             email,
             created_at: profile.created_at,
             is_blocked: status?.is_blocked || false,
@@ -128,7 +123,7 @@ export const useAdminUsers = () => {
         });
 
       console.log('Final processed users count:', processedUsers.length);
-      console.log('Processed users:', processedUsers);
+      console.log('Final processed users:', processedUsers);
       return processedUsers;
     }
   });
