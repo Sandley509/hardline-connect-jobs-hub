@@ -17,7 +17,7 @@ const Shop = () => {
     {
       id: "headset-1",
       name: "Logitech USB Headset",
-      price: 89.99,
+      price: 19.99,
       image: "/logitech.webp",
       stripeProductId: "prod_headset_pro_123",
       features: ["Noise Cancellation", "USB Connection", "Comfortable Padding", "Adjustable Microphone"],
@@ -27,7 +27,7 @@ const Shop = () => {
     {
       id: "headset-2",
       name: "Jabra USB Headset",
-      price: 129.99,
+      price: 69.99,
       image: "/jabra.jpg",
       stripeProductId: "prod_headset_elite_456",
       features: ["Superior Audio Quality", "All-Day Comfort", "Quick Disconnect", "Warranty Included"],
@@ -53,7 +53,7 @@ const Shop = () => {
       price: 47.99,
       image: "/glinetmt300.webp",
       stripeProductId: "prod_router_mt300_123",
-      features: ["Mini Travel Router", "OpenWrt Pre-installed", "300Mbps WiFi", "Portable Design"],
+      features: ["Mini Travel Router", "OpenWrt Pre-installed","Free shipping Dominican Republic", "300Mbps WiFi", "Portable Design"],
       description: "Compact travel router perfect for secure connections on the go."
     },
     {
@@ -62,7 +62,7 @@ const Shop = () => {
       price: 149.99,
       image: "/glinetaxt.webp",
       stripeProductId: "prod_router_axt1800_456",
-      features: ["WiFi 6 Router", "1800Mbps Speed", "VPN Client & Server", "Gigabit Ports"],
+      features: ["WiFi 6 Router", "1800Mbps Speed", "Free shipping Dominican Republic","VPN Client & Server", "Gigabit Ports"],
       description: "High-performance WiFi 6 router with advanced VPN capabilities."
     },
     {
@@ -71,7 +71,7 @@ const Shop = () => {
       price: 139.99,
       image: "/mt1300.jpg",
       stripeProductId: "prod_router_mt1300_789",
-      features: ["Beryl Travel Router", "AC1300 WiFi", "VPN Ready", "Compact Design"],
+      features: ["Beryl Travel Router", "AC1300 WiFi","Free shipping Dominican Republic", "VPN Ready", "Compact Design"],
       description: "Reliable travel router with excellent VPN support and performance."
     }
   ];
