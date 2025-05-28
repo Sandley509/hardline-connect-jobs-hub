@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,85 +27,21 @@ const CheckoutForm = ({ onBack }: CheckoutFormProps) => {
     address: '',
     city: '',
     zipCode: '',
-    phone: '',
-    cardNumber: '',
-    expiryDate: '',
-    cvv: '',
-    cardName: ''
+    phone: ''
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    
-    // Format card number with spaces
-    if (name === 'cardNumber') {
-      const formatted = value.replace(/\s/g, '').replace(/(\d{4})/g, '$1 ').trim();
-      setFormData({ ...formData, [name]: formatted });
-      return;
-    }
-    
-    // Format expiry date
-    if (name === 'expiryDate') {
-      const formatted = value.replace(/\D/g, '').replace(/(\d{2})(\d{2})/, '$1/$2');
-      setFormData({ ...formData, [name]: formatted });
-      return;
-    }
-    
     setFormData({ ...formData, [name]: value });
   };
 
-  const createOrder = async () => {
-    if (!user) throw new Error('User not authenticated');
-
-    // Create order
-    const { data: order, error: orderError } = await supabase
-      .from('orders')
-      .insert({
-        user_id: user.id,
-        total_amount: getTotalPrice(),
-        status: 'completed'
-      })
-      .select()
-      .single();
-
-    if (orderError) throw orderError;
-
-    // Create order items
-    const orderItems = items.map(item => ({
-      order_id: order.id,
-      product_name: item.name,
-      product_type: item.category,
-      price: item.price,
-      quantity: item.quantity
-    }));
-
-    const { error: itemsError } = await supabase
-      .from('order_items')
-      .insert(orderItems);
-
-    if (itemsError) throw itemsError;
-
-    // Create notification for admin
-    const { error: notificationError } = await supabase
-      .from('notifications')
-      .insert({
-        title: 'New Order Received',
-        message: `Order #${order.id.slice(0, 8)} - $${getTotalPrice().toFixed(2)} from ${formData.firstName} ${formData.lastName}`,
-        type: 'info'
-      });
-
-    if (notificationError) console.error('Failed to create notification:', notificationError);
-
-    return order;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleStripeCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsProcessing(true);
 
     try {
       // Validate required fields
-      const requiredFields = ['email', 'firstName', 'lastName', 'address', 'city', 'zipCode', 'phone', 'cardNumber', 'expiryDate', 'cvv', 'cardName'];
+      const requiredFields = ['email', 'firstName', 'lastName', 'address', 'city', 'zipCode', 'phone'];
       const missingFields = requiredFields.filter(field => !formData[field as keyof typeof formData]);
       
       if (missingFields.length > 0) {
@@ -116,38 +53,29 @@ const CheckoutForm = ({ onBack }: CheckoutFormProps) => {
         return;
       }
 
-      // Validate card number (simple check)
-      if (formData.cardNumber.replace(/\s/g, '').length < 16) {
-        toast({
-          title: "Invalid Card Number",
-          description: "Please enter a valid card number.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      // Simulate payment processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Create order in database
-      await createOrder();
-
-      // Clear cart
-      clearCart();
-
-      toast({
-        title: "Payment Successful!",
-        description: `Your order for $${getTotalPrice().toFixed(2)} has been processed successfully.`,
+      // Create checkout session
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: {
+          items: items,
+          userEmail: formData.email,
+          userInfo: formData
+        }
       });
 
-      // Redirect to success page
-      navigate('/checkout-success');
+      if (error) {
+        throw error;
+      }
+
+      // Redirect to Stripe checkout
+      if (data?.url) {
+        window.location.href = data.url;
+      }
 
     } catch (error) {
-      console.error('Payment error:', error);
+      console.error('Checkout error:', error);
       toast({
-        title: "Payment Failed",
-        description: "There was an error processing your payment. Please try again.",
+        title: "Checkout Failed",
+        description: "There was an error starting the checkout process. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -186,15 +114,14 @@ const CheckoutForm = ({ onBack }: CheckoutFormProps) => {
         </CardContent>
       </Card>
 
-      {/* Payment Form */}
+      {/* Billing Information */}
       <div className="space-y-6">
-        {/* Billing Information */}
         <Card>
           <CardHeader>
             <CardTitle>Billing Information</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleStripeCheckout} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="firstName">First Name *</Label>
@@ -275,75 +202,10 @@ const CheckoutForm = ({ onBack }: CheckoutFormProps) => {
                   />
                 </div>
               </div>
-            </form>
-          </CardContent>
-        </Card>
-
-        {/* Payment Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <CreditCard className="h-5 w-5 mr-2" />
-              Payment Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="cardName">Cardholder Name *</Label>
-                <Input
-                  id="cardName"
-                  name="cardName"
-                  value={formData.cardName}
-                  onChange={handleInputChange}
-                  placeholder="John Doe"
-                  required
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="cardNumber">Card Number *</Label>
-                <Input
-                  id="cardNumber"
-                  name="cardNumber"
-                  value={formData.cardNumber}
-                  onChange={handleInputChange}
-                  placeholder="1234 5678 9012 3456"
-                  maxLength={19}
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="expiryDate">Expiry Date *</Label>
-                  <Input
-                    id="expiryDate"
-                    name="expiryDate"
-                    value={formData.expiryDate}
-                    onChange={handleInputChange}
-                    placeholder="MM/YY"
-                    maxLength={5}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="cvv">CVV *</Label>
-                  <Input
-                    id="cvv"
-                    name="cvv"
-                    value={formData.cvv}
-                    onChange={handleInputChange}
-                    placeholder="123"
-                    maxLength={4}
-                    required
-                  />
-                </div>
-              </div>
 
               <div className="flex items-center text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
                 <Lock className="h-4 w-4 mr-2" />
-                Your payment information is secure and encrypted
+                Your payment will be securely processed by Stripe
               </div>
 
               <div className="flex space-x-4 pt-4">
@@ -357,7 +219,7 @@ const CheckoutForm = ({ onBack }: CheckoutFormProps) => {
                   Back to Cart
                 </Button>
                 <Button
-                  onClick={handleSubmit}
+                  type="submit"
                   className="flex-1 bg-green-600 hover:bg-green-700"
                   disabled={isProcessing}
                 >
@@ -367,11 +229,11 @@ const CheckoutForm = ({ onBack }: CheckoutFormProps) => {
                       Processing...
                     </>
                   ) : (
-                    `Complete Payment $${getTotalPrice().toFixed(2)}`
+                    `Pay with Stripe $${getTotalPrice().toFixed(2)}`
                   )}
                 </Button>
               </div>
-            </div>
+            </form>
           </CardContent>
         </Card>
       </div>
