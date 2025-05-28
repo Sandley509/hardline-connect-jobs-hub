@@ -1,3 +1,4 @@
+
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -111,8 +112,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             </Link>
           </div>
 
-          {/* User Info & Logout */}
-          <div className="border-t border-gray-200 p-4 space-y-2">
+          {/* User Info */}
+          <div className="border-t border-gray-200 p-4">
             <div className="flex items-center px-4 py-2">
               <div className="flex-shrink-0">
                 <div className="h-8 w-8 bg-orange-600 rounded-full flex items-center justify-center">
@@ -124,14 +125,6 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 <p className="text-xs text-gray-500">{user?.email}</p>
               </div>
             </div>
-            <Button
-              onClick={handleLogout}
-              variant="ghost"
-              className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
-            >
-              <LogOut className="h-4 w-4 mr-3" />
-              Logout
-            </Button>
           </div>
         </div>
       </div>
@@ -172,6 +165,17 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               </Button>
               <Button variant="ghost" size="sm">
                 <HelpCircle className="h-5 w-5" />
+              </Button>
+              
+              {/* Logout Button - moved to top */}
+              <Button
+                onClick={handleLogout}
+                variant="ghost"
+                size="sm"
+                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
               </Button>
             </div>
           </div>
