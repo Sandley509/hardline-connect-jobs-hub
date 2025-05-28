@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
@@ -82,20 +83,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      // Check if user is admin
-      const { data: roleData } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', authUser.id)
-        .eq('role', 'admin')
-        .single();
+      // Check if user is admin using the is_admin function
+      const { data: adminCheck, error: adminError } = await supabase
+        .rpc('is_admin', { _user_id: authUser.id });
+
+      if (adminError) {
+        console.error('Error checking admin status:', adminError);
+      }
 
       if (profile) {
         setUser({
           id: profile.id,
           username: profile.username || 'User',
           email: authUser.email || '',
-          role: roleData ? 'admin' : 'user'
+          role: adminCheck ? 'admin' : 'user'
         });
       }
     } catch (error) {

@@ -46,7 +46,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 // Redirect authenticated users away from auth pages
 const AuthRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth();
+  const { user, loading, isAdmin } = useAuth();
   
   if (loading) {
     return (
@@ -56,7 +56,12 @@ const AuthRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
   
-  return user ? <Navigate to="/dashboard" replace /> : <>{children}</>;
+  // Redirect admins to admin dashboard, regular users to dashboard
+  if (user) {
+    return <Navigate to={isAdmin ? "/admin/dashboard" : "/dashboard"} replace />;
+  }
+  
+  return <>{children}</>;
 };
 
 const App = () => (
