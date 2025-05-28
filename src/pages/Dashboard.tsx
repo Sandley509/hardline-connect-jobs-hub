@@ -4,6 +4,8 @@ import { Card } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
 import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import {
   ShoppingCart,
   Package,
@@ -18,6 +20,34 @@ import {
 const Dashboard = () => {
   const { user } = useAuth();
   const { items, getTotalPrice, getTotalItems } = useCart();
+  const [orderCount, setOrderCount] = useState(0);
+  const [memberSince, setMemberSince] = useState<string>("");
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!user) return;
+
+      // Fetch real order count
+      const { data: orders } = await supabase
+        .from('orders')
+        .select('id')
+        .eq('user_id', user.id);
+      
+      setOrderCount(orders?.length || 0);
+
+      // Get member since date from auth user
+      const { data: authData } = await supabase.auth.getUser();
+      if (authData.user?.created_at) {
+        const createdDate = new Date(authData.user.created_at);
+        setMemberSince(createdDate.toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'long' 
+        }));
+      }
+    };
+
+    fetchUserData();
+  }, [user]);
 
   const stats = [
     {
@@ -36,7 +66,7 @@ const Dashboard = () => {
     },
     {
       title: "Orders",
-      value: "3",
+      value: orderCount.toString(),
       icon: Package,
       color: "text-orange-600",
       bgColor: "bg-orange-100"
@@ -206,7 +236,11 @@ const Dashboard = () => {
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-600">Member Since</label>
-                  <p className="text-gray-900">December 2024</p>
+                  <p className="text-gray-900">{memberSince || 'Loading...'}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-600">Total Orders</label>
+                  <p className="text-gray-900">{orderCount}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-600">Account Status</label>

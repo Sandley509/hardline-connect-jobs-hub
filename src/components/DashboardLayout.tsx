@@ -1,4 +1,3 @@
-
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -56,7 +55,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           <img 
             src="/lovable-uploads/0d1120d5-eeac-4a96-b036-afdac05d35d1.png" 
             alt="Hardline Connect Logo" 
-            className="h-8 w-auto"
+            className="h-10 w-auto"
           />
           <button
             onClick={() => setIsSidebarOpen(false)}
