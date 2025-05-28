@@ -1,24 +1,26 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useCart } from '@/contexts/CartContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { CreditCard, Loader2, Lock } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CheckoutFormProps {
   onBack: () => void;
 }
 
 const CheckoutForm = ({ onBack }: CheckoutFormProps) => {
-  const { items, getTotalPrice } = useCart();
+  const { items, getTotalPrice, clearCart } = useCart();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [isProcessing, setIsProcessing] = useState(false);
   const [formData, setFormData] = useState({
-    email: '',
+    email: user?.email || '',
     firstName: '',
     lastName: '',
     address: '',
@@ -51,6 +53,51 @@ const CheckoutForm = ({ onBack }: CheckoutFormProps) => {
     setFormData({ ...formData, [name]: value });
   };
 
+  const createOrder = async () => {
+    if (!user) throw new Error('User not authenticated');
+
+    // Create order
+    const { data: order, error: orderError } = await supabase
+      .from('orders')
+      .insert({
+        user_id: user.id,
+        total_amount: getTotalPrice(),
+        status: 'completed'
+      })
+      .select()
+      .single();
+
+    if (orderError) throw orderError;
+
+    // Create order items
+    const orderItems = items.map(item => ({
+      order_id: order.id,
+      product_name: item.name,
+      product_type: item.category,
+      price: item.price,
+      quantity: item.quantity
+    }));
+
+    const { error: itemsError } = await supabase
+      .from('order_items')
+      .insert(orderItems);
+
+    if (itemsError) throw itemsError;
+
+    // Create notification for admin
+    const { error: notificationError } = await supabase
+      .from('notifications')
+      .insert({
+        title: 'New Order Received',
+        message: `Order #${order.id.slice(0, 8)} - $${getTotalPrice().toFixed(2)} from ${formData.firstName} ${formData.lastName}`,
+        type: 'info'
+      });
+
+    if (notificationError) console.error('Failed to create notification:', notificationError);
+
+    return order;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsProcessing(true);
@@ -80,7 +127,13 @@ const CheckoutForm = ({ onBack }: CheckoutFormProps) => {
       }
 
       // Simulate payment processing
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Create order in database
+      await createOrder();
+
+      // Clear cart
+      clearCart();
 
       toast({
         title: "Payment Successful!",
