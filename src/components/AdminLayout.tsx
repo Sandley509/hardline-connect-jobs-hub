@@ -17,7 +17,8 @@ import {
   Package,
   User,
   FileText,
-  Wrench
+  Wrench,
+  UserPlus
 } from "lucide-react";
 
 interface AdminLayoutProps {
@@ -52,6 +53,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     // Items only available to admins
     const adminOnlyItems = [
       { path: '/admin/users', icon: User, label: 'User Management' },
+      { path: '/admin/moderators', icon: UserPlus, label: 'Moderator Management' },
       { path: '/admin/notifications', icon: Bell, label: 'Notifications' },
     ];
 
