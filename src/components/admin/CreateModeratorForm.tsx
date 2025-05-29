@@ -46,39 +46,27 @@ const CreateModeratorForm = () => {
     setIsSubmitting(true);
 
     try {
-      // Create the user account
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: formData.email,
-        password: formData.password,
-        user_metadata: {
+      console.log('Calling create-moderator edge function...');
+      
+      // Call the edge function to create moderator
+      const { data, error } = await supabase.functions.invoke('create-moderator', {
+        body: {
+          email: formData.email,
+          password: formData.password,
           username: formData.username
-        },
-        email_confirm: true // Auto-confirm email for admin-created accounts
+        }
       });
 
-      if (authError) {
-        console.error('Auth error:', authError);
-        throw authError;
+      if (error) {
+        console.error('Edge function error:', error);
+        throw error;
       }
 
-      if (!authData.user) {
-        throw new Error('User creation failed - no user data returned');
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to create moderator');
       }
 
-      // Assign moderator role
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .insert({
-          user_id: authData.user.id,
-          role: 'moderator'
-        });
-
-      if (roleError) {
-        console.error('Role assignment error:', roleError);
-        // Try to clean up the created user if role assignment fails
-        await supabase.auth.admin.deleteUser(authData.user.id);
-        throw roleError;
-      }
+      console.log('Moderator created successfully:', data);
 
       toast({
         title: "Moderator Created Successfully",
@@ -93,10 +81,12 @@ const CreateModeratorForm = () => {
       
       let errorMessage = "Failed to create moderator account.";
       
-      if (error.message?.includes('User already registered')) {
+      if (error.message?.includes('User already registered') || error.message?.includes('already registered')) {
         errorMessage = "A user with this email address already exists.";
       } else if (error.message?.includes('Invalid email')) {
         errorMessage = "Please enter a valid email address.";
+      } else if (error.message?.includes('Access denied')) {
+        errorMessage = "You don't have permission to create moderators.";
       } else if (error.message) {
         errorMessage = error.message;
       }
