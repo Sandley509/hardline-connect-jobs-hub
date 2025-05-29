@@ -49,7 +49,7 @@ export const fetchRelatedUserData = async () => {
     supabase.from('user_status').select('*'),
     supabase.from('user_profiles').select('*'),
     supabase.from('orders').select('user_id, total_amount'),
-    supabase.auth.admin.listUsers() // Fetch actual auth users to get real emails
+    supabase.auth.admin.listUsers() // This returns { data: { users: User[] } }
   ];
 
   const results = await Promise.allSettled(promises);
@@ -57,7 +57,20 @@ export const fetchRelatedUserData = async () => {
   const userStatuses = results[0].status === 'fulfilled' ? results[0].value.data || [] : [];
   const userProfiles = results[1].status === 'fulfilled' ? results[1].value.data || [] : [];
   const allOrders = results[2].status === 'fulfilled' ? results[2].value.data || [] : [];
-  const authUsers = results[3].status === 'fulfilled' ? results[3].value.data?.users || [] : [];
+  
+  // Handle auth users response properly
+  let authUsers: any[] = [];
+  if (results[3].status === 'fulfilled') {
+    const authResponse = results[3].value;
+    // Check if the response has a data.users structure or is directly an array
+    if (authResponse.data && authResponse.data.users) {
+      authUsers = authResponse.data.users;
+    } else if (Array.isArray(authResponse.data)) {
+      authUsers = authResponse.data;
+    } else if (Array.isArray(authResponse)) {
+      authUsers = authResponse;
+    }
+  }
 
   if (results[0].status === 'rejected') {
     console.error('Error fetching user statuses:', results[0].reason);
