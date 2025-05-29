@@ -46,23 +46,43 @@ serve(async (req) => {
       throw new Error("No items provided");
     }
 
-    // Create line items for Stripe
-    const lineItems = items.map((item: any) => ({
-      price_data: {
-        currency: "usd",
-        product_data: {
-          name: item.name,
-          images: item.image ? [item.image] : [],
+    // Get the origin from headers to build absolute URLs
+    const origin = req.headers.get("origin") || "https://your-domain.com";
+
+    // Create line items for Stripe with proper absolute image URLs
+    const lineItems = items.map((item: any) => {
+      let imageUrl = '';
+      if (item.image) {
+        // Convert relative URLs to absolute URLs
+        if (item.image.startsWith('/')) {
+          imageUrl = `${origin}${item.image}`;
+        } else if (item.image.startsWith('http')) {
+          imageUrl = item.image;
+        } else {
+          imageUrl = `${origin}/${item.image}`;
+        }
+      }
+
+      const lineItem: any = {
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: item.name,
+          },
+          unit_amount: Math.round(item.price * 100), // Convert to cents
         },
-        unit_amount: Math.round(item.price * 100), // Convert to cents
-      },
-      quantity: item.quantity || 1,
-    }));
+        quantity: item.quantity || 1,
+      };
+
+      // Only add images array if we have a valid image URL
+      if (imageUrl) {
+        lineItem.price_data.product_data.images = [imageUrl];
+      }
+
+      return lineItem;
+    });
 
     console.log('Line items created:', lineItems);
-
-    // Get the origin from headers
-    const origin = req.headers.get("origin") || "https://your-domain.com";
     
     // Create checkout session
     const session = await stripe.checkout.sessions.create({
