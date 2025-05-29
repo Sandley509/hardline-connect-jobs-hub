@@ -45,52 +45,65 @@ export const fetchAdminRoles = async () => {
 };
 
 export const fetchRelatedUserData = async () => {
-  const promises = [
-    supabase.from('user_status').select('*'),
-    supabase.from('user_profiles').select('*'),
-    supabase.from('orders').select('user_id, total_amount'),
-    supabase.auth.admin.listUsers() // This returns { data: { users: User[] } }
-  ];
+  try {
+    // Fetch each data source individually with proper error handling
+    const [userStatusResult, userProfilesResult, ordersResult, authUsersResult] = await Promise.allSettled([
+      supabase.from('user_status').select('*'),
+      supabase.from('user_profiles').select('*'),
+      supabase.from('orders').select('user_id, total_amount'),
+      supabase.auth.admin.listUsers()
+    ]);
 
-  const results = await Promise.allSettled(promises);
-  
-  const userStatuses = results[0].status === 'fulfilled' ? results[0].value.data || [] : [];
-  const userProfiles = results[1].status === 'fulfilled' ? results[1].value.data || [] : [];
-  const allOrders = results[2].status === 'fulfilled' ? results[2].value.data || [] : [];
-  
-  // Handle auth users response properly
-  let authUsers: any[] = [];
-  if (results[3].status === 'fulfilled') {
-    const authResponse = results[3].value;
-    // Check if the response has a data.users structure or is directly an array
-    if (authResponse.data && authResponse.data.users) {
-      authUsers = authResponse.data.users;
-    } else if (Array.isArray(authResponse.data)) {
-      authUsers = authResponse.data;
-    } else if (Array.isArray(authResponse)) {
-      authUsers = authResponse;
+    // Handle user statuses
+    let userStatuses: any[] = [];
+    if (userStatusResult.status === 'fulfilled' && userStatusResult.value.data) {
+      userStatuses = userStatusResult.value.data;
+    } else if (userStatusResult.status === 'rejected') {
+      console.error('Error fetching user statuses:', userStatusResult.reason);
     }
-  }
 
-  if (results[0].status === 'rejected') {
-    console.error('Error fetching user statuses:', results[0].reason);
-  }
-  if (results[1].status === 'rejected') {
-    console.error('Error fetching user profiles:', results[1].reason);
-  }
-  if (results[2].status === 'rejected') {
-    console.error('Error fetching orders:', results[2].reason);
-  }
-  if (results[3].status === 'rejected') {
-    console.error('Error fetching auth users:', results[3].reason);
-  }
+    // Handle user profiles
+    let userProfiles: any[] = [];
+    if (userProfilesResult.status === 'fulfilled' && userProfilesResult.value.data) {
+      userProfiles = userProfilesResult.value.data;
+    } else if (userProfilesResult.status === 'rejected') {
+      console.error('Error fetching user profiles:', userProfilesResult.reason);
+    }
 
-  console.log('User statuses found:', userStatuses.length);
-  console.log('User profiles found:', userProfiles.length);
-  console.log('Orders found:', allOrders.length);
-  console.log('Auth users found:', authUsers.length);
+    // Handle orders
+    let allOrders: any[] = [];
+    if (ordersResult.status === 'fulfilled' && ordersResult.value.data) {
+      allOrders = ordersResult.value.data;
+    } else if (ordersResult.status === 'rejected') {
+      console.error('Error fetching orders:', ordersResult.reason);
+    }
 
-  return { userStatuses, userProfiles, allOrders, authUsers };
+    // Handle auth users - this has a different structure
+    let authUsers: any[] = [];
+    if (authUsersResult.status === 'fulfilled') {
+      const authResponse = authUsersResult.value;
+      if (authResponse && authResponse.data && Array.isArray(authResponse.data.users)) {
+        authUsers = authResponse.data.users;
+      }
+    } else {
+      console.error('Error fetching auth users:', authUsersResult.reason);
+    }
+
+    console.log('User statuses found:', userStatuses.length);
+    console.log('User profiles found:', userProfiles.length);
+    console.log('Orders found:', allOrders.length);
+    console.log('Auth users found:', authUsers.length);
+
+    return { userStatuses, userProfiles, allOrders, authUsers };
+  } catch (error) {
+    console.error('Error in fetchRelatedUserData:', error);
+    return { 
+      userStatuses: [], 
+      userProfiles: [], 
+      allOrders: [], 
+      authUsers: [] 
+    };
+  }
 };
 
 export const processUserData = (
