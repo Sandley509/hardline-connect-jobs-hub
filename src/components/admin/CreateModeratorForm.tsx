@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { UserPlus, Mail, Lock, User } from "lucide-react";
+import { UserPlus, Mail, Lock, User, AlertCircle, CheckCircle } from "lucide-react";
 
 const CreateModeratorForm = () => {
   const [formData, setFormData] = useState({
@@ -15,6 +15,7 @@ const CreateModeratorForm = () => {
     username: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<string>('');
   const { toast } = useToast();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -24,6 +25,9 @@ const CreateModeratorForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    console.log('Form submission started');
+    setDebugInfo('Starting form submission...');
     
     if (!formData.email || !formData.password || !formData.username) {
       toast({
@@ -36,7 +40,7 @@ const CreateModeratorForm = () => {
 
     if (formData.password.length < 6) {
       toast({
-        title: "Validation Error",
+        title: "Validation Error", 
         description: "Password must be at least 6 characters long.",
         variant: "destructive",
       });
@@ -44,9 +48,54 @@ const CreateModeratorForm = () => {
     }
 
     setIsSubmitting(true);
+    setDebugInfo('Validating user session...');
 
     try {
-      console.log('Calling create-moderator edge function...');
+      // Check if user is authenticated
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        console.error('Authentication error:', userError);
+        setDebugInfo(`Authentication failed: ${userError?.message}`);
+        toast({
+          title: "Authentication Error",
+          description: "You must be logged in to create moderators.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('User authenticated:', user.id);
+      setDebugInfo(`User authenticated: ${user.id}`);
+
+      // Check if user is admin
+      const { data: isAdminResult, error: adminError } = await supabase
+        .rpc('is_admin', { _user_id: user.id });
+
+      if (adminError) {
+        console.error('Admin check error:', adminError);
+        setDebugInfo(`Admin check failed: ${adminError.message}`);
+        toast({
+          title: "Permission Error",
+          description: "Unable to verify admin permissions.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!isAdminResult) {
+        console.error('User is not admin:', user.id);
+        setDebugInfo('User does not have admin permissions');
+        toast({
+          title: "Access Denied",
+          description: "Only administrators can create moderators.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('Admin verification passed');
+      setDebugInfo('Admin verification passed, calling edge function...');
       
       // Call the edge function to create moderator
       const { data, error } = await supabase.functions.invoke('create-moderator', {
@@ -57,16 +106,22 @@ const CreateModeratorForm = () => {
         }
       });
 
+      console.log('Edge function response:', { data, error });
+      setDebugInfo(`Edge function response: ${JSON.stringify({ data, error })}`);
+
       if (error) {
         console.error('Edge function error:', error);
         throw error;
       }
 
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to create moderator');
+      if (!data || !data.success) {
+        const errorMessage = data?.error || 'Failed to create moderator';
+        console.error('Moderator creation failed:', errorMessage);
+        throw new Error(errorMessage);
       }
 
       console.log('Moderator created successfully:', data);
+      setDebugInfo('Moderator created successfully!');
 
       toast({
         title: "Moderator Created Successfully",
@@ -78,6 +133,7 @@ const CreateModeratorForm = () => {
 
     } catch (error: any) {
       console.error('Error creating moderator:', error);
+      setDebugInfo(`Error: ${error.message}`);
       
       let errorMessage = "Failed to create moderator account.";
       
@@ -169,6 +225,17 @@ const CreateModeratorForm = () => {
           {isSubmitting ? "Creating Moderator..." : "Create Moderator Account"}
         </Button>
       </form>
+
+      {/* Debug Information */}
+      {debugInfo && (
+        <div className="mt-4 p-3 bg-gray-100 rounded-lg">
+          <div className="flex items-center mb-2">
+            <AlertCircle className="h-4 w-4 text-blue-600 mr-2" />
+            <span className="text-sm font-medium text-gray-900">Debug Info:</span>
+          </div>
+          <p className="text-xs text-gray-600 font-mono">{debugInfo}</p>
+        </div>
+      )}
     </Card>
   );
 };

@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import OrderStatistics from "@/components/admin/OrderStatistics";
 import ActiveUsersList from "@/components/admin/ActiveUsersList";
 import CreateModeratorForm from "@/components/admin/CreateModeratorForm";
-import { Shield, Users, UserPlus } from "lucide-react";
+import { Shield, Users, UserPlus, AlertCircle } from "lucide-react";
 
 const AdminDashboard = () => {
   const { isAdmin, isModerator } = useAuth();
@@ -21,9 +21,25 @@ const AdminDashboard = () => {
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching orders:', error);
+        throw error;
+      }
       return data || [];
     }
+  });
+
+  // Test admin permissions
+  const { data: adminTest, error: adminError } = useQuery({
+    queryKey: ['admin-test'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return { isAdmin: false, error: 'Not authenticated' };
+
+      const { data: result, error } = await supabase.rpc('is_admin', { _user_id: user.id });
+      return { isAdmin: result, error: error?.message };
+    },
+    enabled: !!isAdmin
   });
 
   return (
@@ -45,6 +61,20 @@ const AdminDashboard = () => {
               </p>
             </div>
           </div>
+          
+          {/* Debug Info for Admin */}
+          {isAdmin && adminTest && (
+            <div className="mt-4 p-3 bg-black bg-opacity-20 rounded-lg">
+              <div className="flex items-center mb-2">
+                <AlertCircle className="h-4 w-4 mr-2" />
+                <span className="text-sm font-medium">Admin Status Check:</span>
+              </div>
+              <p className="text-xs font-mono">
+                Admin Permission: {adminTest.isAdmin ? '✅ Confirmed' : '❌ Failed'} 
+                {adminTest.error && ` (${adminTest.error})`}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Admin-only Create Moderator Section */}
@@ -81,7 +111,7 @@ const AdminDashboard = () => {
 
         {/* Statistics and Active Users */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <OrderStatistics orders={orders} />
+          <OrderStatistics orders={orders || []} />
           <ActiveUsersList />
         </div>
 
