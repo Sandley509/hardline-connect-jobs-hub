@@ -2,6 +2,8 @@
 import AdminLayout from "@/components/AdminLayout";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import OrderStatistics from "@/components/admin/OrderStatistics";
 import ActiveUsersList from "@/components/admin/ActiveUsersList";
 import CreateModeratorForm from "@/components/admin/CreateModeratorForm";
@@ -9,6 +11,20 @@ import { Shield, Users, UserPlus } from "lucide-react";
 
 const AdminDashboard = () => {
   const { isAdmin, isModerator } = useAuth();
+
+  // Fetch orders data for statistics
+  const { data: orders } = useQuery({
+    queryKey: ['admin-dashboard-orders'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    }
+  });
 
   return (
     <AdminLayout>
@@ -65,7 +81,7 @@ const AdminDashboard = () => {
 
         {/* Statistics and Active Users */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <OrderStatistics />
+          <OrderStatistics orders={orders} />
           <ActiveUsersList />
         </div>
 
