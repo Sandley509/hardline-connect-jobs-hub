@@ -2,19 +2,19 @@
 import AdminLayout from "@/components/AdminLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Shield, Users, UserPlus, AlertCircle, CheckCircle } from "lucide-react";
+import { Shield, Users, UserPlus, AlertCircle } from "lucide-react";
 import CreateModeratorForm from "@/components/admin/CreateModeratorForm";
 
 const AdminModerators = () => {
   const { isAdmin, isModerator } = useAuth();
 
   // Fetch moderators list
-  const { data: moderators, isLoading: loadingModerators } = useQuery({
+  const { data: moderators, isLoading: loadingModerators, error: moderatorsError } = useQuery({
     queryKey: ['moderators'],
     queryFn: async () => {
+      console.log('Fetching moderators list...');
       const { data, error } = await supabase
         .from('user_roles')
         .select(`
@@ -30,6 +30,7 @@ const AdminModerators = () => {
         throw error;
       }
 
+      console.log('Moderators fetched:', data);
       return data || [];
     },
     enabled: isAdmin
@@ -39,6 +40,7 @@ const AdminModerators = () => {
   const { data: admins, isLoading: loadingAdmins } = useQuery({
     queryKey: ['admins'],
     queryFn: async () => {
+      console.log('Fetching admins list...');
       const { data, error } = await supabase
         .from('user_roles')
         .select(`
@@ -54,6 +56,7 @@ const AdminModerators = () => {
         throw error;
       }
 
+      console.log('Admins fetched:', data);
       return data || [];
     },
     enabled: isAdmin
@@ -98,12 +101,15 @@ const AdminModerators = () => {
                 <div className="space-y-4">
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <div className="flex items-center mb-2">
-                      <CheckCircle className="h-5 w-5 text-blue-600 mr-2" />
+                      <UserPlus className="h-5 w-5 text-blue-600 mr-2" />
                       <span className="font-medium text-blue-900">Active Moderators</span>
                     </div>
                     <p className="text-2xl font-bold text-blue-900">
                       {loadingModerators ? '...' : moderators?.length || 0}
                     </p>
+                    {moderatorsError && (
+                      <p className="text-xs text-red-600 mt-1">Error loading moderators</p>
+                    )}
                   </div>
                   
                   <div className="bg-green-50 border border-green-200 rounded-lg p-4">
@@ -131,6 +137,12 @@ const AdminModerators = () => {
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 mx-auto"></div>
                   <p className="text-gray-500 mt-2">Loading moderators...</p>
                 </div>
+              ) : moderatorsError ? (
+                <div className="text-center py-8">
+                  <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-3" />
+                  <p className="text-red-500">Error loading moderators</p>
+                  <p className="text-sm text-gray-400">Please try refreshing the page</p>
+                </div>
               ) : moderators && moderators.length > 0 ? (
                 <div className="space-y-3">
                   {moderators.map((mod: any) => (
@@ -140,7 +152,7 @@ const AdminModerators = () => {
                           <Shield className="h-5 w-5 text-orange-600" />
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900">{mod.profiles.username}</p>
+                          <p className="font-medium text-gray-900">{mod.profiles?.username || 'Unknown User'}</p>
                           <p className="text-sm text-gray-500">
                             Created: {new Date(mod.created_at).toLocaleDateString()}
                           </p>

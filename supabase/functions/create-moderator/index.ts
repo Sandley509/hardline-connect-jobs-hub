@@ -14,6 +14,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log('=== CREATE MODERATOR FUNCTION STARTED ===')
+    
     // Create a Supabase client with service role key for admin operations
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -28,6 +30,8 @@ serve(async (req) => {
 
     // Create regular client for user authentication check
     const authHeader = req.headers.get('Authorization')!
+    console.log('Auth header present:', !!authHeader)
+    
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -43,13 +47,15 @@ serve(async (req) => {
     if (userError || !user) {
       console.error('User authentication error:', userError)
       return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
+        JSON.stringify({ error: 'Unauthorized - Please log in again' }),
         { 
           status: 401, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       )
     }
+
+    console.log('Authenticated user:', user.id)
 
     // Check if user is admin using the database function
     const { data: isAdminResult, error: adminError } = await supabase
@@ -58,7 +64,7 @@ serve(async (req) => {
     if (adminError) {
       console.error('Admin check error:', adminError)
       return new Response(
-        JSON.stringify({ error: 'Error checking admin status' }),
+        JSON.stringify({ error: 'Error checking admin status', details: adminError.message }),
         { 
           status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -77,9 +83,15 @@ serve(async (req) => {
       )
     }
 
-    const { email, password, username } = await req.json()
+    console.log('Admin verification passed')
+
+    const requestBody = await req.json()
+    console.log('Request body received:', requestBody)
+    
+    const { email, password, username } = requestBody
 
     if (!email || !password || !username) {
+      console.error('Missing required fields:', { email: !!email, password: !!password, username: !!username })
       return new Response(
         JSON.stringify({ error: 'Email, password, and username are required' }),
         { 
@@ -89,7 +101,7 @@ serve(async (req) => {
       )
     }
 
-    console.log('Creating moderator account for:', email)
+    console.log('Creating moderator account for:', email, 'username:', username)
 
     // Create the user account using admin client
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
@@ -103,8 +115,14 @@ serve(async (req) => {
 
     if (authError) {
       console.error('Error creating user:', authError)
+      let errorMessage = authError.message
+      
+      if (authError.message?.includes('User already registered')) {
+        errorMessage = 'A user with this email already exists'
+      }
+      
       return new Response(
-        JSON.stringify({ error: authError.message }),
+        JSON.stringify({ error: errorMessage }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -113,6 +131,7 @@ serve(async (req) => {
     }
 
     if (!authData.user) {
+      console.error('User creation failed - no user returned')
       return new Response(
         JSON.stringify({ error: 'User creation failed' }),
         { 
@@ -143,7 +162,7 @@ serve(async (req) => {
       }
       
       return new Response(
-        JSON.stringify({ error: 'Failed to create user profile' }),
+        JSON.stringify({ error: 'Failed to create user profile', details: profileError.message }),
         { 
           status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -174,7 +193,7 @@ serve(async (req) => {
       }
       
       return new Response(
-        JSON.stringify({ error: 'Failed to assign moderator role' }),
+        JSON.stringify({ error: 'Failed to assign moderator role', details: roleError.message }),
         { 
           status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -183,6 +202,7 @@ serve(async (req) => {
     }
 
     console.log('Moderator role assigned successfully')
+    console.log('=== CREATE MODERATOR FUNCTION COMPLETED SUCCESSFULLY ===')
 
     return new Response(
       JSON.stringify({ 
@@ -197,9 +217,13 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('Unexpected error:', error)
+    console.error('Unexpected error in create-moderator function:', error)
     return new Response(
-      JSON.stringify({ error: 'Internal server error', details: error.message }),
+      JSON.stringify({ 
+        error: 'Internal server error', 
+        details: error.message,
+        stack: error.stack 
+      }),
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 

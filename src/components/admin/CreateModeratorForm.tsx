@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { UserPlus, Mail, Lock, User, AlertCircle, CheckCircle } from "lucide-react";
+import { UserPlus, Mail, Lock, User, AlertCircle, CheckCircle, RefreshCw } from "lucide-react";
 
 const CreateModeratorForm = () => {
   const [formData, setFormData] = useState({
@@ -21,27 +21,49 @@ const CreateModeratorForm = () => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    // Clear debug info when user starts typing
+    if (debugInfo) {
+      setDebugInfo('');
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('Form submission started');
+    console.log('=== FORM SUBMISSION STARTED ===');
     setDebugInfo('Starting form submission...');
     
+    // Validation
     if (!formData.email || !formData.password || !formData.username) {
+      const errorMsg = "Please fill in all fields.";
+      setDebugInfo(`Validation failed: ${errorMsg}`);
       toast({
         title: "Validation Error",
-        description: "Please fill in all fields.",
+        description: errorMsg,
         variant: "destructive",
       });
       return;
     }
 
     if (formData.password.length < 6) {
+      const errorMsg = "Password must be at least 6 characters long.";
+      setDebugInfo(`Validation failed: ${errorMsg}`);
       toast({
         title: "Validation Error", 
-        description: "Password must be at least 6 characters long.",
+        description: errorMsg,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      const errorMsg = "Please enter a valid email address.";
+      setDebugInfo(`Validation failed: ${errorMsg}`);
+      toast({
+        title: "Validation Error",
+        description: errorMsg,
         variant: "destructive",
       });
       return;
@@ -56,17 +78,17 @@ const CreateModeratorForm = () => {
       
       if (userError || !user) {
         console.error('Authentication error:', userError);
-        setDebugInfo(`Authentication failed: ${userError?.message}`);
+        setDebugInfo(`Authentication failed: ${userError?.message || 'No user found'}`);
         toast({
           title: "Authentication Error",
-          description: "You must be logged in to create moderators.",
+          description: "You must be logged in to create moderators. Please refresh and try again.",
           variant: "destructive",
         });
         return;
       }
 
       console.log('User authenticated:', user.id);
-      setDebugInfo(`User authenticated: ${user.id}`);
+      setDebugInfo(`User authenticated: ${user.id.slice(0, 8)}...`);
 
       // Check if user is admin
       const { data: isAdminResult, error: adminError } = await supabase
@@ -77,7 +99,7 @@ const CreateModeratorForm = () => {
         setDebugInfo(`Admin check failed: ${adminError.message}`);
         toast({
           title: "Permission Error",
-          description: "Unable to verify admin permissions.",
+          description: "Unable to verify admin permissions. Please try again.",
           variant: "destructive",
         });
         return;
@@ -107,21 +129,45 @@ const CreateModeratorForm = () => {
       });
 
       console.log('Edge function response:', { data, error });
-      setDebugInfo(`Edge function response: ${JSON.stringify({ data, error })}`);
-
+      
       if (error) {
         console.error('Edge function error:', error);
-        throw error;
+        setDebugInfo(`Edge function error: ${error.message}`);
+        
+        let errorMessage = "Failed to create moderator account.";
+        if (error.message?.includes('User already registered') || error.message?.includes('already exists')) {
+          errorMessage = "A user with this email address already exists.";
+        } else if (error.message?.includes('Invalid email')) {
+          errorMessage = "Please enter a valid email address.";
+        } else if (error.message?.includes('Access denied')) {
+          errorMessage = "You don't have permission to create moderators.";
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+
+        toast({
+          title: "Error Creating Moderator",
+          description: errorMessage,
+          variant: "destructive",
+        });
+        return;
       }
 
       if (!data || !data.success) {
-        const errorMessage = data?.error || 'Failed to create moderator';
+        const errorMessage = data?.error || 'Failed to create moderator - unknown error';
         console.error('Moderator creation failed:', errorMessage);
-        throw new Error(errorMessage);
+        setDebugInfo(`Creation failed: ${errorMessage}`);
+        
+        toast({
+          title: "Error Creating Moderator",
+          description: errorMessage,
+          variant: "destructive",
+        });
+        return;
       }
 
       console.log('Moderator created successfully:', data);
-      setDebugInfo('Moderator created successfully!');
+      setDebugInfo('✅ Moderator created successfully!');
 
       toast({
         title: "Moderator Created Successfully",
@@ -132,24 +178,12 @@ const CreateModeratorForm = () => {
       setFormData({ email: '', password: '', username: '' });
 
     } catch (error: any) {
-      console.error('Error creating moderator:', error);
-      setDebugInfo(`Error: ${error.message}`);
+      console.error('Unexpected error creating moderator:', error);
+      setDebugInfo(`Unexpected error: ${error.message}`);
       
-      let errorMessage = "Failed to create moderator account.";
-      
-      if (error.message?.includes('User already registered') || error.message?.includes('already registered')) {
-        errorMessage = "A user with this email address already exists.";
-      } else if (error.message?.includes('Invalid email')) {
-        errorMessage = "Please enter a valid email address.";
-      } else if (error.message?.includes('Access denied')) {
-        errorMessage = "You don't have permission to create moderators.";
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-
       toast({
-        title: "Error Creating Moderator",
-        description: errorMessage,
+        title: "Unexpected Error",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -222,7 +256,14 @@ const CreateModeratorForm = () => {
           disabled={isSubmitting}
           className="w-full bg-orange-600 hover:bg-orange-700"
         >
-          {isSubmitting ? "Creating Moderator..." : "Create Moderator Account"}
+          {isSubmitting ? (
+            <>
+              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+              Creating Moderator...
+            </>
+          ) : (
+            "Create Moderator Account"
+          )}
         </Button>
       </form>
 
@@ -230,7 +271,11 @@ const CreateModeratorForm = () => {
       {debugInfo && (
         <div className="mt-4 p-3 bg-gray-100 rounded-lg">
           <div className="flex items-center mb-2">
-            <AlertCircle className="h-4 w-4 text-blue-600 mr-2" />
+            {debugInfo.includes('✅') ? (
+              <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
+            ) : (
+              <AlertCircle className="h-4 w-4 text-blue-600 mr-2" />
+            )}
             <span className="text-sm font-medium text-gray-900">Debug Info:</span>
           </div>
           <p className="text-xs text-gray-600 font-mono">{debugInfo}</p>
