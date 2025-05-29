@@ -50,7 +50,7 @@ const CheckoutSuccess = () => {
       }
 
       try {
-        // First check if order already exists
+        // Check if order already exists
         console.log('Checking for existing order...');
         const { data: existingOrder, error: orderError } = await supabase
           .from('orders')
@@ -101,63 +101,8 @@ const CheckoutSuccess = () => {
           return;
         }
 
-        // If still no order, create a fallback order
-        console.log('Creating fallback order...');
-        const fallbackOrderData = {
-          user_id: user?.id || null,
-          total_amount: 25.00,
-          status: 'completed',
-          stripe_session_id: sessionId,
-          created_at: new Date().toISOString()
-        };
-
-        const { data: fallbackOrder, error: fallbackOrderError } = await supabase
-          .from('orders')
-          .insert(fallbackOrderData)
-          .select()
-          .single();
-
-        if (fallbackOrderError) {
-          console.error('Fallback order creation error:', fallbackOrderError);
-          throw new Error('Failed to create order');
-        }
-
-        console.log('Fallback order created:', fallbackOrder.id);
-        
-        // Create fallback order items
-        const fallbackItems = [{
-          order_id: fallbackOrder.id,
-          product_name: 'Shop Purchase',
-          product_type: 'product',
-          price: 25.00,
-          quantity: 1
-        }];
-
-        const { error: fallbackItemsError } = await supabase
-          .from('order_items')
-          .insert(fallbackItems);
-
-        if (fallbackItemsError) {
-          console.error('Fallback order items error:', fallbackItemsError);
-        }
-
-        // Fetch complete order with items
-        const { data: completeOrder } = await supabase
-          .from('orders')
-          .select(`
-            id,
-            total_amount,
-            status,
-            created_at,
-            order_items(*)
-          `)
-          .eq('id', fallbackOrder.id)
-          .single();
-
-        if (completeOrder) {
-          setOrderDetails(completeOrder);
-        }
-
+        // If still no order, create a fallback success state
+        console.log('Creating fallback success state...');
         clearCart();
         setIsVerifying(false);
 
