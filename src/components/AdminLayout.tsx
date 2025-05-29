@@ -26,7 +26,7 @@ interface AdminLayoutProps {
 
 const AdminLayout = ({ children }: AdminLayoutProps) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin, isModerator } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -35,15 +35,36 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     navigate('/');
   };
 
-  const menuItems = [
-    { path: '/admin/dashboard', icon: BarChart3, label: 'Dashboard' },
-    { path: '/admin/orders', icon: Package, label: 'Order Management' },
-    { path: '/admin/users', icon: User, label: 'User Management' },
-    { path: '/admin/services', icon: Wrench, label: 'Services & Products' },
-    { path: '/admin/jobs', icon: Briefcase, label: 'Job Management' },
-    { path: '/admin/blog', icon: FileText, label: 'Blog Management' },
-    { path: '/admin/notifications', icon: Bell, label: 'Notifications' },
-  ];
+  // Define menu items based on user role
+  const getMenuItems = () => {
+    const baseItems = [
+      { path: '/admin/dashboard', icon: BarChart3, label: 'Dashboard' },
+    ];
+
+    // Items available to both moderators and admins
+    const moderatorItems = [
+      { path: '/admin/orders', icon: Package, label: 'Order Management' },
+      { path: '/admin/services', icon: Wrench, label: 'Services & Products' },
+      { path: '/admin/jobs', icon: Briefcase, label: 'Job Management' },
+      { path: '/admin/blog', icon: FileText, label: 'Blog Management' },
+    ];
+
+    // Items only available to admins
+    const adminOnlyItems = [
+      { path: '/admin/users', icon: User, label: 'User Management' },
+      { path: '/admin/notifications', icon: Bell, label: 'Notifications' },
+    ];
+
+    if (isAdmin) {
+      return [...baseItems, ...moderatorItems, ...adminOnlyItems];
+    } else if (isModerator) {
+      return [...baseItems, ...moderatorItems];
+    }
+
+    return baseItems;
+  };
+
+  const menuItems = getMenuItems();
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -52,7 +73,9 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
           <div className="flex items-center space-x-2">
             <Shield className="h-8 w-8 text-orange-600" />
-            <span className="font-bold text-gray-900">Admin Panel</span>
+            <span className="font-bold text-gray-900">
+              {isAdmin ? 'Admin Panel' : 'Moderator Panel'}
+            </span>
           </div>
           <button
             onClick={() => setIsSidebarOpen(false)}
@@ -94,7 +117,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
             </Link>
           </div>
 
-          {/* Admin Info & Logout */}
+          {/* Admin/Moderator Info & Logout */}
           <div className="border-t border-gray-200 p-4 space-y-2">
             <div className="flex items-center px-4 py-2">
               <div className="flex-shrink-0">
@@ -104,7 +127,9 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
               </div>
               <div className="ml-3">
                 <p className="text-sm font-medium text-gray-900">{user?.username}</p>
-                <p className="text-xs text-orange-600 font-medium">Administrator</p>
+                <p className="text-xs text-orange-600 font-medium">
+                  {isAdmin ? 'Administrator' : 'Moderator'}
+                </p>
               </div>
             </div>
             <Button
@@ -132,7 +157,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                 <Menu className="h-5 w-5" />
               </button>
               <h1 className="ml-2 text-xl font-semibold text-gray-900 lg:ml-0">
-                Admin Dashboard
+                {isAdmin ? 'Admin Dashboard' : 'Moderator Dashboard'}
               </h1>
             </div>
           </div>

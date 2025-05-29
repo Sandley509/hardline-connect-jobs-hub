@@ -4,14 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 
 const AdminRedirect = () => {
-  const { user, isAdmin, loading } = useAuth();
+  const { user, isModeratorOrAdmin, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && user && isAdmin) {
+    if (!loading && user && isModeratorOrAdmin) {
       navigate('/admin/dashboard', { replace: true });
     }
-  }, [user, isAdmin, loading, navigate]);
+  }, [user, isModeratorOrAdmin, loading, navigate]);
 
   return null;
 };

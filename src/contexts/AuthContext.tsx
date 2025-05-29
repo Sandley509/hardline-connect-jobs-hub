@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
@@ -7,7 +6,7 @@ interface UserProfile {
   id: string;
   username: string;
   email: string;
-  role?: 'admin' | 'user';
+  role?: 'admin' | 'moderator' | 'user';
   created_at?: string;
 }
 
@@ -20,6 +19,8 @@ interface AuthContextType {
   updateProfile: (data: Partial<UserProfile>) => void;
   changePassword: (currentPassword: string, newPassword: string) => Promise<boolean>;
   isAdmin: boolean;
+  isModerator: boolean;
+  isModeratorOrAdmin: boolean;
   loading: boolean;
 }
 
@@ -84,12 +85,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      // Check if user is admin using the is_admin function
+      // Check user role using the new functions
       const { data: adminCheck, error: adminError } = await supabase
         .rpc('is_admin', { _user_id: authUser.id });
 
+      const { data: moderatorCheck, error: moderatorError } = await supabase
+        .rpc('is_moderator', { _user_id: authUser.id });
+
       if (adminError) {
         console.error('Error checking admin status:', adminError);
+      }
+      if (moderatorError) {
+        console.error('Error checking moderator status:', moderatorError);
+      }
+
+      let userRole: 'admin' | 'moderator' | 'user' = 'user';
+      if (adminCheck) {
+        userRole = 'admin';
+      } else if (moderatorCheck) {
+        userRole = 'moderator';
       }
 
       if (profile) {
@@ -97,7 +111,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           id: profile.id,
           username: profile.username || 'User',
           email: authUser.email || '',
-          role: adminCheck ? 'admin' : 'user',
+          role: userRole,
           created_at: profile.created_at
         });
       }
@@ -218,6 +232,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       updateProfile,
       changePassword,
       isAdmin: user?.role === 'admin',
+      isModerator: user?.role === 'moderator',
+      isModeratorOrAdmin: user?.role === 'admin' || user?.role === 'moderator',
       loading
     }}>
       {children}
