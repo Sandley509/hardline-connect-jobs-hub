@@ -51,12 +51,23 @@ serve(async (req) => {
       )
     }
 
-    // Check if user is admin
+    // Check if user is admin using the database function
     const { data: isAdminResult, error: adminError } = await supabase
       .rpc('is_admin', { _user_id: user.id })
 
-    if (adminError || !isAdminResult) {
+    if (adminError) {
       console.error('Admin check error:', adminError)
+      return new Response(
+        JSON.stringify({ error: 'Error checking admin status' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    if (!isAdminResult) {
+      console.error('User is not admin:', user.id)
       return new Response(
         JSON.stringify({ error: 'Access denied - Admin privileges required' }),
         { 
@@ -113,6 +124,35 @@ serve(async (req) => {
 
     console.log('User created successfully:', authData.user.id)
 
+    // Create profile entry using admin client
+    const { error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .insert({
+        id: authData.user.id,
+        username: username
+      })
+
+    if (profileError) {
+      console.error('Error creating profile:', profileError)
+      // Try to clean up the created user if profile creation fails
+      try {
+        await supabaseAdmin.auth.admin.deleteUser(authData.user.id)
+        console.log('Cleaned up user after profile creation failure')
+      } catch (cleanupError) {
+        console.error('Failed to cleanup user:', cleanupError)
+      }
+      
+      return new Response(
+        JSON.stringify({ error: 'Failed to create user profile' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    console.log('Profile created successfully')
+
     // Assign moderator role using admin client
     const { error: roleError } = await supabaseAdmin
       .from('user_roles')
@@ -124,12 +164,13 @@ serve(async (req) => {
     if (roleError) {
       console.error('Error assigning moderator role:', roleError)
       
-      // Try to clean up the created user if role assignment fails
+      // Try to clean up the created user and profile if role assignment fails
       try {
+        await supabaseAdmin.from('profiles').delete().eq('id', authData.user.id)
         await supabaseAdmin.auth.admin.deleteUser(authData.user.id)
-        console.log('Cleaned up user after role assignment failure')
+        console.log('Cleaned up user and profile after role assignment failure')
       } catch (cleanupError) {
-        console.error('Failed to cleanup user:', cleanupError)
+        console.error('Failed to cleanup user and profile:', cleanupError)
       }
       
       return new Response(
@@ -158,7 +199,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Unexpected error:', error)
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
+      JSON.stringify({ error: 'Internal server error', details: error.message }),
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
