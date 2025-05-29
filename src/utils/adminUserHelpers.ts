@@ -48,7 +48,8 @@ export const fetchRelatedUserData = async () => {
   const promises = [
     supabase.from('user_status').select('*'),
     supabase.from('user_profiles').select('*'),
-    supabase.from('orders').select('user_id, total_amount')
+    supabase.from('orders').select('user_id, total_amount'),
+    supabase.auth.admin.listUsers() // Fetch actual auth users to get real emails
   ];
 
   const results = await Promise.allSettled(promises);
@@ -56,6 +57,7 @@ export const fetchRelatedUserData = async () => {
   const userStatuses = results[0].status === 'fulfilled' ? results[0].value.data || [] : [];
   const userProfiles = results[1].status === 'fulfilled' ? results[1].value.data || [] : [];
   const allOrders = results[2].status === 'fulfilled' ? results[2].value.data || [] : [];
+  const authUsers = results[3].status === 'fulfilled' ? results[3].value.data?.users || [] : [];
 
   if (results[0].status === 'rejected') {
     console.error('Error fetching user statuses:', results[0].reason);
@@ -66,12 +68,16 @@ export const fetchRelatedUserData = async () => {
   if (results[2].status === 'rejected') {
     console.error('Error fetching orders:', results[2].reason);
   }
+  if (results[3].status === 'rejected') {
+    console.error('Error fetching auth users:', results[3].reason);
+  }
 
   console.log('User statuses found:', userStatuses.length);
   console.log('User profiles found:', userProfiles.length);
   console.log('Orders found:', allOrders.length);
+  console.log('Auth users found:', authUsers.length);
 
-  return { userStatuses, userProfiles, allOrders };
+  return { userStatuses, userProfiles, allOrders, authUsers };
 };
 
 export const processUserData = (
@@ -80,7 +86,8 @@ export const processUserData = (
   adminUserIds: string[],
   userStatuses: any[],
   userProfiles: any[],
-  allOrders: any[]
+  allOrders: any[],
+  authUsers: any[] = []
 ): UserProfile[] => {
   return allProfiles
     .filter(profile => {
@@ -104,6 +111,7 @@ export const processUserData = (
         const status = userStatuses.find(s => s.user_id === profile.id);
         const userProfile = userProfiles.find(up => up.user_id === profile.id);
         const userOrders = allOrders.filter(order => order.user_id === profile.id) || [];
+        const authUser = authUsers.find(au => au.id === profile.id);
         
         const orderCount = userOrders.length;
         const totalSpent = userOrders.reduce((sum, order) => {
@@ -111,11 +119,9 @@ export const processUserData = (
           return sum + (isNaN(amount) ? 0 : amount);
         }, 0);
 
-        let email = profile.username ? `${profile.username}@example.com` : `user${profile.id.slice(0, 8)}@example.com`;
-        if (userProfile?.first_name && userProfile?.last_name) {
-          email = `${userProfile.first_name.toLowerCase()}.${userProfile.last_name.toLowerCase()}@example.com`;
-        }
-
+        // Use real email from auth user if available, otherwise fallback to generated email
+        let email = authUser?.email || `${profile.username || `user${profile.id.slice(0, 8)}`}@example.com`;
+        
         const processedUser = {
           id: profile.id,
           username: profile.username || `User_${profile.id.slice(0, 8)}`,
@@ -135,7 +141,7 @@ export const processUserData = (
         return {
           id: profile.id,
           username: profile.username || `User_${profile.id.slice(0, 8)}`,
-          email: profile.username ? `${profile.username}@example.com` : `user${profile.id.slice(0, 8)}@example.com`,
+          email: `${profile.username || `user${profile.id.slice(0, 8)}`}@example.com`,
           created_at: profile.created_at,
           is_blocked: false,
           blocked_reason: null,

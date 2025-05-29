@@ -22,7 +22,7 @@ export const useAdminUsers = () => {
         }
 
         const adminUserIds = await fetchAdminRoles();
-        const { userStatuses, userProfiles, allOrders } = await fetchRelatedUserData();
+        const { userStatuses, userProfiles, allOrders, authUsers } = await fetchRelatedUserData();
 
         const processedUsers = processUserData(
           allProfiles,
@@ -30,7 +30,8 @@ export const useAdminUsers = () => {
           adminUserIds,
           userStatuses,
           userProfiles,
-          allOrders
+          allOrders,
+          authUsers
         );
 
         console.log('Final processed users count:', processedUsers.length);

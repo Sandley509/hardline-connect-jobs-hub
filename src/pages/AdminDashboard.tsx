@@ -6,12 +6,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
 import { Users, Briefcase, Bell, Shield, Package } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import ActiveUsersList from "@/components/admin/ActiveUsersList";
 import ProductManager from "@/components/admin/ProductManager";
+import CreateModeratorForm from "@/components/admin/CreateModeratorForm";
 
 const AdminDashboard = () => {
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
   const { toast } = useToast();
+  const { isAdmin } = useAuth();
 
   const { data: stats } = useQuery({
     queryKey: ['admin-stats'],
@@ -165,6 +168,24 @@ const AdminDashboard = () => {
             );
           })}
         </div>
+
+        {/* Admin-only Moderator Creation */}
+        {isAdmin && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <CreateModeratorForm />
+            
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-blue-900 mb-3">Moderator Permissions</h3>
+              <ul className="text-sm text-blue-800 space-y-2">
+                <li>• Manage orders and customer communications</li>
+                <li>• Add and edit services & products</li>
+                <li>• Manage job postings</li>
+                <li>• Create and manage blog posts</li>
+                <li>• Cannot access user management or system settings</li>
+              </ul>
+            </div>
+          </div>
+        )}
 
         {/* Product Management Section */}
         <ProductManager />

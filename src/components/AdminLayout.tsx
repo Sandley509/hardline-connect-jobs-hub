@@ -119,9 +119,9 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
             </Link>
           </div>
 
-          {/* Admin/Moderator Info & Logout */}
-          <div className="border-t border-gray-200 p-4 space-y-2">
-            <div className="flex items-center px-4 py-2">
+          {/* Admin/Moderator Info */}
+          <div className="border-t border-gray-200 p-4">
+            <div className="flex items-center px-4 py-2 mb-2">
               <div className="flex-shrink-0">
                 <div className="h-8 w-8 bg-orange-600 rounded-full flex items-center justify-center">
                   <Shield className="h-4 w-4 text-white" />
@@ -134,14 +134,6 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                 </p>
               </div>
             </div>
-            <Button
-              onClick={handleLogout}
-              variant="ghost"
-              className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
-            >
-              <LogOut className="h-4 w-4 mr-3" />
-              Logout
-            </Button>
           </div>
         </div>
       </div>
@@ -162,6 +154,16 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                 {isAdmin ? 'Admin Dashboard' : 'Moderator Dashboard'}
               </h1>
             </div>
+            
+            {/* Logout Button in Header */}
+            <Button
+              onClick={handleLogout}
+              variant="ghost"
+              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </Button>
           </div>
         </header>
 
