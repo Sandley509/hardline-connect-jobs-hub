@@ -172,7 +172,7 @@ serve(async (req) => {
 
     console.log('Profile created successfully')
 
-    // Assign moderator role using admin client
+    // Assign moderator role using admin client - use string instead of enum cast
     const { error: roleError } = await supabaseAdmin
       .from('user_roles')
       .insert({
