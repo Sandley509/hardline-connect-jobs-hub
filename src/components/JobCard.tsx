@@ -18,11 +18,12 @@ interface JobCardProps {
   job: JobLink;
   onShare: (job: JobLink) => void;
   onApply: (job: JobLink) => void;
+  isHighlighted?: boolean;
 }
 
-const JobCard = ({ job, onShare, onApply }: JobCardProps) => {
+const JobCard = ({ job, onShare, onApply, isHighlighted }: JobCardProps) => {
   return (
-    <Card className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+    <Card className={`hover:shadow-lg transition-all duration-300 hover:-translate-y-1 ${isHighlighted ? 'bg-teal-50 border-teal-200' : ''}`}>
       <CardHeader>
         <div className="flex flex-col md:flex-row md:justify-between md:items-start space-y-4 md:space-y-0">
           <div className="flex-1">

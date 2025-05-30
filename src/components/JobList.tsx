@@ -17,7 +17,11 @@ interface JobLink {
   description: string;
 }
 
-const JobList = () => {
+interface JobListProps {
+  highlightedJobId?: string | null;
+}
+
+const JobList = ({ highlightedJobId }: JobListProps) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
 
@@ -57,17 +61,16 @@ const JobList = () => {
   };
 
   const shareJobOnWhatsApp = (job: JobLink) => {
-    // Use your website URL instead of the job's direct URL
-    const yourWebsiteJobUrl = `https://your-website.com/redirect?job=${encodeURIComponent(job.url)}&title=${encodeURIComponent(job.title)}&company=${encodeURIComponent(job.company)}`;
-    const message = `Check out this job opportunity!\n\n*${job.title}*\nCompany: ${job.company}\n${job.location ? `Location: ${job.location}\n` : ''}${job.type ? `Type: ${job.type}\n` : ''}${job.salary ? `Salary: ${job.salary}\n` : ''}\nApply here: ${yourWebsiteJobUrl}`;
+    // Use your actual website URL with proper job parameters
+    const jobPageUrl = `https://hardlineconnect.store/?jobId=${job.id}&ref=whatsapp`;
+    const message = `Check out this job opportunity!\n\n*${job.title}*\nCompany: ${job.company}\n${job.location ? `Location: ${job.location}\n` : ''}${job.type ? `Type: ${job.type}\n` : ''}${job.salary ? `Salary: ${job.salary}\n` : ''}\nView and apply here: ${jobPageUrl}`;
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
 
   const handleApplyNow = (job: JobLink) => {
-    // Replace 'your-website.com' with your actual website URL
-    const redirectUrl = `https://your-website.com/redirect?job=${encodeURIComponent(job.url)}&title=${encodeURIComponent(job.title)}&company=${encodeURIComponent(job.company)}`;
-    window.open(redirectUrl, '_blank');
+    // Redirect to the job's direct URL when applying from your site
+    window.open(job.url, '_blank');
   };
 
   return (
@@ -89,12 +92,18 @@ const JobList = () => {
       ) : (
         <div className="space-y-4 md:space-y-6">
           {currentJobs.map((job) => (
-            <JobCard
+            <div
               key={job.id}
-              job={job}
-              onShare={shareJobOnWhatsApp}
-              onApply={handleApplyNow}
-            />
+              id={`job-${job.id}`}
+              className={highlightedJobId === job.id ? "ring-2 ring-teal-500 rounded-lg" : ""}
+            >
+              <JobCard
+                job={job}
+                onShare={shareJobOnWhatsApp}
+                onApply={handleApplyNow}
+                isHighlighted={highlightedJobId === job.id}
+              />
+            </div>
           ))}
 
           {currentJobs.length === 0 && !isLoading && (
