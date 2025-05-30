@@ -1,4 +1,3 @@
-
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -63,6 +62,12 @@ const Index = () => {
     window.open(whatsappUrl, '_blank');
   };
 
+  const handleApplyNow = (job: JobLink) => {
+    // Replace 'your-website.com' with your actual website URL
+    const redirectUrl = `https://your-website.com/redirect?job=${encodeURIComponent(job.url)}&title=${encodeURIComponent(job.title)}&company=${encodeURIComponent(job.company)}`;
+    window.open(redirectUrl, '_blank');
+  };
+
   return (
     <Layout>
       {/* Hero Section */}
@@ -121,10 +126,11 @@ const Index = () => {
                             <Share2 className="mr-2 h-4 w-4" />
                             Share on WhatsApp
                           </Button>
-                          <Button asChild className="bg-teal-600 hover:bg-teal-700 w-full sm:w-auto">
-                            <a href={job.url} target="_blank" rel="noopener noreferrer">
-                              Apply Now <ExternalLink className="ml-2 h-4 w-4" />
-                            </a>
+                          <Button 
+                            onClick={() => handleApplyNow(job)}
+                            className="bg-teal-600 hover:bg-teal-700 w-full sm:w-auto"
+                          >
+                            Apply Now <ExternalLink className="ml-2 h-4 w-4" />
                           </Button>
                         </div>
                       </div>
