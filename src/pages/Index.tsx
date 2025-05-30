@@ -3,7 +3,7 @@ import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, ExternalLink, MapPin, Clock, DollarSign } from "lucide-react";
+import { ChevronLeft, ChevronRight, ExternalLink, MapPin, Clock, DollarSign, Share2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -57,6 +57,12 @@ const Index = () => {
     }
   };
 
+  const shareJobOnWhatsApp = (job: JobLink) => {
+    const message = `Check out this job opportunity!\n\n*${job.title}*\nCompany: ${job.company}\n${job.location ? `Location: ${job.location}\n` : ''}${job.type ? `Type: ${job.type}\n` : ''}${job.salary ? `Salary: ${job.salary}\n` : ''}\nApply here: ${job.url}`;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
   return (
     <Layout>
       {/* Hero Section */}
@@ -106,11 +112,21 @@ const Index = () => {
                             {job.company}
                           </CardDescription>
                         </div>
-                        <Button asChild className="bg-teal-600 hover:bg-teal-700 w-full md:w-auto">
-                          <a href={job.url} target="_blank" rel="noopener noreferrer">
-                            Apply Now <ExternalLink className="ml-2 h-4 w-4" />
-                          </a>
-                        </Button>
+                        <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+                          <Button 
+                            onClick={() => shareJobOnWhatsApp(job)}
+                            variant="outline" 
+                            className="border-green-500 text-green-600 hover:bg-green-50 w-full sm:w-auto"
+                          >
+                            <Share2 className="mr-2 h-4 w-4" />
+                            Share on WhatsApp
+                          </Button>
+                          <Button asChild className="bg-teal-600 hover:bg-teal-700 w-full sm:w-auto">
+                            <a href={job.url} target="_blank" rel="noopener noreferrer">
+                              Apply Now <ExternalLink className="ml-2 h-4 w-4" />
+                            </a>
+                          </Button>
+                        </div>
                       </div>
                     </CardHeader>
                     <CardContent>
