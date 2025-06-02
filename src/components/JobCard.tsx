@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, MapPin, Clock, DollarSign, Share2 } from "lucide-react";
+import { ExternalLink, MapPin, Clock, DollarSign, Share2, Tag } from "lucide-react";
 
 interface JobLink {
   id: string;
@@ -12,6 +12,7 @@ interface JobLink {
   salary: string;
   url: string;
   description: string;
+  category: string;
 }
 
 interface JobCardProps {
@@ -22,14 +23,41 @@ interface JobCardProps {
 }
 
 const JobCard = ({ job, onShare, onApply, isHighlighted }: JobCardProps) => {
+  const getCategoryDisplayName = (category: string) => {
+    switch (category) {
+      case 'customer_service':
+        return 'Customer Service';
+      case 'interpretation':
+        return 'Interpretation';
+      default:
+        return category;
+    }
+  };
+
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case 'customer_service':
+        return 'bg-blue-100 text-blue-800';
+      case 'interpretation':
+        return 'bg-purple-100 text-purple-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   return (
     <Card className={`hover:shadow-lg transition-all duration-300 hover:-translate-y-1 ${isHighlighted ? 'bg-teal-50 border-teal-200' : ''}`}>
       <CardHeader>
         <div className="flex flex-col md:flex-row md:justify-between md:items-start space-y-4 md:space-y-0">
           <div className="flex-1">
-            <CardTitle className="text-lg md:text-xl text-teal-600 mb-2">
-              {job.title}
-            </CardTitle>
+            <div className="flex items-center gap-2 mb-2">
+              <CardTitle className="text-lg md:text-xl text-teal-600">
+                {job.title}
+              </CardTitle>
+              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(job.category)}`}>
+                {getCategoryDisplayName(job.category)}
+              </span>
+            </div>
             <CardDescription className="text-base md:text-lg font-semibold text-gray-700">
               {job.company}
             </CardDescription>

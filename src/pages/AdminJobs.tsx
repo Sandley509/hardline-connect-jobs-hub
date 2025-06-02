@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
@@ -21,6 +22,7 @@ interface Job {
   salary: string;
   url: string;
   description: string;
+  category: string;
   created_at: string;
 }
 
@@ -34,7 +36,8 @@ const AdminJobs = () => {
     type: '',
     salary: '',
     url: '',
-    description: ''
+    description: '',
+    category: 'customer_service'
   });
   const { toast } = useToast();
   const { user } = useAuth();
@@ -121,7 +124,8 @@ const AdminJobs = () => {
       type: '',
       salary: '',
       url: '',
-      description: ''
+      description: '',
+      category: 'customer_service'
     });
     setShowForm(false);
     setEditingJob(null);
@@ -136,7 +140,8 @@ const AdminJobs = () => {
       type: job.type || '',
       salary: job.salary || '',
       url: job.url,
-      description: job.description || ''
+      description: job.description || '',
+      category: job.category || 'customer_service'
     });
     setShowForm(true);
   };
@@ -147,6 +152,28 @@ const AdminJobs = () => {
       updateJobMutation.mutate({ id: editingJob.id, ...formData });
     } else {
       createJobMutation.mutate(formData);
+    }
+  };
+
+  const getCategoryDisplayName = (category: string) => {
+    switch (category) {
+      case 'customer_service':
+        return 'Customer Service';
+      case 'interpretation':
+        return 'Interpretation';
+      default:
+        return category;
+    }
+  };
+
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case 'customer_service':
+        return 'bg-blue-100 text-blue-800';
+      case 'interpretation':
+        return 'bg-purple-100 text-purple-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -187,6 +214,21 @@ const AdminJobs = () => {
                   />
                 </div>
                 <div>
+                  <Label htmlFor="category">Job Category</Label>
+                  <Select
+                    value={formData.category}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="customer_service">Customer Service</SelectItem>
+                      <SelectItem value="interpretation">Interpretation</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
                   <Label htmlFor="location">Location</Label>
                   <Input
                     id="location"
@@ -212,7 +254,7 @@ const AdminJobs = () => {
                     placeholder="e.g., $50,000 - $60,000"
                   />
                 </div>
-                <div>
+                <div className="md:col-span-2">
                   <Label htmlFor="url">Application URL</Label>
                   <Input
                     id="url"
@@ -259,7 +301,12 @@ const AdminJobs = () => {
                 <div key={job.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900">{job.title}</h3>
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="text-lg font-semibold text-gray-900">{job.title}</h3>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(job.category)}`}>
+                          {getCategoryDisplayName(job.category)}
+                        </span>
+                      </div>
                       <p className="text-gray-600 font-medium">{job.company}</p>
                       <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
                         {job.location && <span>{job.location}</span>}

@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import JobCard from "./JobCard";
 import JobPagination from "./JobPagination";
 import MobileAds from "./MobileAds";
+import JobCategoryFilter from "./JobCategoryFilter";
 
 interface JobLink {
   id: string;
@@ -15,6 +16,7 @@ interface JobLink {
   salary: string;
   url: string;
   description: string;
+  category: string;
 }
 
 interface JobListProps {
@@ -23,6 +25,7 @@ interface JobListProps {
 
 const JobList = ({ highlightedJobId }: JobListProps) => {
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const itemsPerPage = 6;
 
   const { data: jobLinks = [], isLoading } = useQuery({
@@ -42,11 +45,26 @@ const JobList = ({ highlightedJobId }: JobListProps) => {
     }
   });
 
+  // Filter jobs by category
+  const filteredJobs = selectedCategory === 'all' 
+    ? jobLinks 
+    : jobLinks.filter(job => job.category === selectedCategory);
+
+  // Calculate counts for each category
+  const customerServiceCount = jobLinks.filter(job => job.category === 'customer_service').length;
+  const interpretationCount = jobLinks.filter(job => job.category === 'interpretation').length;
+
   // Calculate pagination
-  const totalPages = Math.ceil(jobLinks.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredJobs.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentJobs = jobLinks.slice(startIndex, endIndex);
+  const currentJobs = filteredJobs.slice(startIndex, endIndex);
+
+  // Reset to page 1 when category changes
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category);
+    setCurrentPage(1);
+  };
 
   const nextPage = () => {
     if (currentPage < totalPages) {
@@ -61,7 +79,6 @@ const JobList = ({ highlightedJobId }: JobListProps) => {
   };
 
   const shareJobOnWhatsApp = (job: JobLink) => {
-    // Use your actual website URL with proper job parameters
     const jobPageUrl = `https://hardlineconnect.store/?jobId=${job.id}&ref=whatsapp`;
     const message = `Check out this job opportunity!\n\n*${job.title}*\nCompany: ${job.company}\n${job.location ? `Location: ${job.location}\n` : ''}${job.type ? `Type: ${job.type}\n` : ''}${job.salary ? `Salary: ${job.salary}\n` : ''}\nView and apply here: ${jobPageUrl}`;
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
@@ -69,8 +86,18 @@ const JobList = ({ highlightedJobId }: JobListProps) => {
   };
 
   const handleApplyNow = (job: JobLink) => {
-    // Redirect to the job's direct URL when applying from your site
     window.open(job.url, '_blank');
+  };
+
+  const getCategoryDisplayName = (category: string) => {
+    switch (category) {
+      case 'customer_service':
+        return 'Customer Service';
+      case 'interpretation':
+        return 'Interpretation';
+      default:
+        return 'All';
+    }
   };
 
   return (
@@ -80,9 +107,16 @@ const JobList = ({ highlightedJobId }: JobListProps) => {
           Available Remote Positions
         </h2>
         <p className="text-gray-600 text-sm md:text-base">
-          Page {currentPage} of {totalPages} ({jobLinks.length} total jobs)
+          Page {currentPage} of {totalPages} ({filteredJobs.length} {getCategoryDisplayName(selectedCategory).toLowerCase()} jobs)
         </p>
       </div>
+
+      <JobCategoryFilter
+        selectedCategory={selectedCategory}
+        onCategoryChange={handleCategoryChange}
+        customerServiceCount={customerServiceCount}
+        interpretationCount={interpretationCount}
+      />
 
       {/* Job Listings */}
       {isLoading ? (
@@ -108,7 +142,7 @@ const JobList = ({ highlightedJobId }: JobListProps) => {
 
           {currentJobs.length === 0 && !isLoading && (
             <div className="text-center py-8">
-              <p className="text-gray-500 text-lg">No job listings available at the moment.</p>
+              <p className="text-gray-500 text-lg">No {getCategoryDisplayName(selectedCategory).toLowerCase()} job listings available at the moment.</p>
               <p className="text-gray-400">Please check back later for new opportunities.</p>
             </div>
           )}
