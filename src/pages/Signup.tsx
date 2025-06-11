@@ -1,4 +1,3 @@
-
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +31,7 @@ const Signup = () => {
     e.preventDefault();
     setIsLoading(true);
 
+    // Validation
     if (formData.password !== formData.confirmPassword) {
       toast({
         title: "Password Mismatch",
@@ -52,12 +52,25 @@ const Signup = () => {
       return;
     }
 
+    if (!formData.username.trim()) {
+      toast({
+        title: "Username Required",
+        description: "Please enter a username.",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
+
     try {
+      console.log('Attempting signup with:', { username: formData.username, email: formData.email });
+      
       const success = await signup(formData.username, formData.email, formData.password);
+      
       if (success) {
         toast({
-          title: "Account Created",
-          description: "Please check your email to verify your account.",
+          title: "Account Created Successfully",
+          description: "Please check your email to verify your account before signing in.",
         });
         navigate('/login');
       } else {
@@ -67,10 +80,26 @@ const Signup = () => {
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Signup error:', error);
+      
+      let errorMessage = "An error occurred during signup. Please try again.";
+      
+      if (error?.message) {
+        if (error.message.includes('User already registered')) {
+          errorMessage = "An account with this email already exists. Please try logging in instead.";
+        } else if (error.message.includes('Invalid email')) {
+          errorMessage = "Please enter a valid email address.";
+        } else if (error.message.includes('Password')) {
+          errorMessage = "Password must be at least 6 characters long.";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       toast({
-        title: "Error",
-        description: "An error occurred during signup. Please try again.",
+        title: "Signup Failed",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
