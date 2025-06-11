@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { UserProfile } from "@/types/adminUsers";
 
@@ -81,6 +80,7 @@ export const processUserData = (
       blockedBy: userStatus?.blocked_by || null,
       lastLoginAt: authUser?.last_sign_in_at || null,
       createdAt: profile.created_at,
+      created_at: profile.created_at, // Fix: Add created_at property
       orderCount: userOrders.length,
       isCurrentUser,
       profile: userProfile || null
