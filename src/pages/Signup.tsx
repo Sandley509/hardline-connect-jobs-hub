@@ -1,3 +1,4 @@
+
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,17 +64,23 @@ const Signup = () => {
     }
 
     try {
-      console.log('Attempting signup with:', { username: formData.username, email: formData.email });
+      console.log('Attempting signup with:', { 
+        username: formData.username, 
+        email: formData.email,
+        passwordLength: formData.password.length 
+      });
       
       const success = await signup(formData.username, formData.email, formData.password);
       
       if (success) {
+        console.log('Signup successful, showing success message');
         toast({
           title: "Account Created Successfully",
-          description: "Please check your email to verify your account before signing in.",
+          description: "Your account has been created. You can now sign in.",
         });
         navigate('/login');
       } else {
+        console.log('Signup returned false');
         toast({
           title: "Signup Failed",
           description: "Failed to create account. Please try again.",
@@ -81,17 +88,21 @@ const Signup = () => {
         });
       }
     } catch (error: any) {
-      console.error('Signup error:', error);
+      console.error('Signup error in component:', error);
       
       let errorMessage = "An error occurred during signup. Please try again.";
       
       if (error?.message) {
+        console.log('Error message:', error.message);
+        
         if (error.message.includes('User already registered')) {
           errorMessage = "An account with this email already exists. Please try logging in instead.";
         } else if (error.message.includes('Invalid email')) {
           errorMessage = "Please enter a valid email address.";
         } else if (error.message.includes('Password')) {
           errorMessage = "Password must be at least 6 characters long.";
+        } else if (error.message.includes('Database error')) {
+          errorMessage = "There was a database error. Please try again in a moment.";
         } else {
           errorMessage = error.message;
         }
