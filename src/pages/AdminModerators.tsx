@@ -4,52 +4,23 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Shield, Users, UserPlus, AlertCircle } from "lucide-react";
-import CreateModeratorForm from "@/components/admin/CreateModeratorForm";
+import { Shield, Users, AlertCircle } from "lucide-react";
 
 const AdminModerators = () => {
-  const { isAdmin, isModerator } = useAuth();
+  const { isAdmin } = useAuth();
 
-  // Fetch moderators list
-  const { data: moderators, isLoading: loadingModerators, error: moderatorsError } = useQuery({
-    queryKey: ['moderators'],
-    queryFn: async () => {
-      console.log('Fetching moderators list...');
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select(`
-          user_id,
-          role,
-          created_at,
-          profiles!inner(username)
-        `)
-        .eq('role', 'moderator');
-
-      if (error) {
-        console.error('Error fetching moderators:', error);
-        throw error;
-      }
-
-      console.log('Moderators fetched:', data);
-      return data || [];
-    },
-    enabled: isAdmin
-  });
-
-  // Fetch admin roles for comparison
+  // Fetch admin list
   const { data: admins, isLoading: loadingAdmins } = useQuery({
     queryKey: ['admins'],
     queryFn: async () => {
       console.log('Fetching admins list...');
       const { data, error } = await supabase
-        .from('user_roles')
+        .from('admins')
         .select(`
           user_id,
-          role,
           created_at,
           profiles!inner(username)
-        `)
-        .eq('role', 'admin');
+        `);
 
       if (error) {
         console.error('Error fetching admins:', error);
@@ -62,7 +33,7 @@ const AdminModerators = () => {
     enabled: isAdmin
   });
 
-  if (!isAdmin && !isModerator) {
+  if (!isAdmin) {
     return (
       <AdminLayout>
         <Card className="p-6">
@@ -71,7 +42,7 @@ const AdminModerators = () => {
             <h3 className="text-lg font-semibold text-red-900">Access Denied</h3>
           </div>
           <p className="text-gray-700">
-            You don't have permission to access this page. This page is only available to administrators and moderators.
+            You don't have permission to access this page. This page is only available to administrators.
           </p>
         </Card>
       </AdminLayout>
@@ -83,158 +54,116 @@ const AdminModerators = () => {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-900">
-            {isAdmin ? 'Moderator Management' : 'Moderator Information'}
+            Administrator Management
           </h1>
         </div>
 
-        {isAdmin ? (
-          <>
-            {/* Create Moderator Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <CreateModeratorForm />
-              
-              <Card className="p-6">
-                <div className="flex items-center mb-4">
-                  <Users className="h-6 w-6 text-blue-600 mr-3" />
-                  <h2 className="text-xl font-semibold text-gray-900">Management Overview</h2>
-                </div>
-                <div className="space-y-4">
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <div className="flex items-center mb-2">
-                      <UserPlus className="h-5 w-5 text-blue-600 mr-2" />
-                      <span className="font-medium text-blue-900">Active Moderators</span>
-                    </div>
-                    <p className="text-2xl font-bold text-blue-900">
-                      {loadingModerators ? '...' : moderators?.length || 0}
-                    </p>
-                    {moderatorsError && (
-                      <p className="text-xs text-red-600 mt-1">Error loading moderators</p>
-                    )}
-                  </div>
-                  
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <div className="flex items-center mb-2">
-                      <Shield className="h-5 w-5 text-green-600 mr-2" />
-                      <span className="font-medium text-green-900">Active Admins</span>
-                    </div>
-                    <p className="text-2xl font-bold text-green-900">
-                      {loadingAdmins ? '...' : admins?.length || 0}
-                    </p>
-                  </div>
-                </div>
-              </Card>
+        {/* Admin Overview */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card className="p-6">
+            <div className="flex items-center mb-4">
+              <Shield className="h-6 w-6 text-green-600 mr-3" />
+              <h2 className="text-xl font-semibold text-gray-900">Admin Overview</h2>
             </div>
-
-            {/* Moderators List */}
-            <Card className="p-6">
-              <div className="flex items-center mb-4">
-                <UserPlus className="h-6 w-6 text-orange-600 mr-3" />
-                <h2 className="text-xl font-semibold text-gray-900">Current Moderators</h2>
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="flex items-center mb-2">
+                <Shield className="h-5 w-5 text-green-600 mr-2" />
+                <span className="font-medium text-green-900">Active Admins</span>
               </div>
-              
-              {loadingModerators ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 mx-auto"></div>
-                  <p className="text-gray-500 mt-2">Loading moderators...</p>
-                </div>
-              ) : moderatorsError ? (
-                <div className="text-center py-8">
-                  <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-3" />
-                  <p className="text-red-500">Error loading moderators</p>
-                  <p className="text-sm text-gray-400">Please try refreshing the page</p>
-                </div>
-              ) : moderators && moderators.length > 0 ? (
-                <div className="space-y-3">
-                  {moderators.map((mod: any) => (
-                    <div key={mod.user_id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                      <div className="flex items-center">
-                        <div className="h-10 w-10 bg-orange-100 rounded-full flex items-center justify-center mr-3">
-                          <Shield className="h-5 w-5 text-orange-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-900">{mod.profiles?.username || 'Unknown User'}</p>
-                          <p className="text-sm text-gray-500">
-                            Created: {new Date(mod.created_at).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                        Moderator
-                      </span>
+              <p className="text-2xl font-bold text-green-900">
+                {loadingAdmins ? '...' : admins?.length || 0}
+              </p>
+            </div>
+          </Card>
+
+          <Card className="p-6">
+            <div className="flex items-center mb-4">
+              <Users className="h-6 w-6 text-blue-600 mr-3" />
+              <h2 className="text-xl font-semibold text-gray-900">System Information</h2>
+            </div>
+            <div className="space-y-4">
+              <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
+                <p className="font-medium mb-1">Simplified Admin System:</p>
+                <ul className="text-xs space-y-1">
+                  <li>• Role system has been simplified</li>
+                  <li>• Only admin roles are supported</li>
+                  <li>• Moderator functionality removed</li>
+                  <li>• Cleaner database structure</li>
+                </ul>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* Admins List */}
+        <Card className="p-6">
+          <div className="flex items-center mb-4">
+            <Shield className="h-6 w-6 text-orange-600 mr-3" />
+            <h2 className="text-xl font-semibold text-gray-900">Current Administrators</h2>
+          </div>
+          
+          {loadingAdmins ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 mx-auto"></div>
+              <p className="text-gray-500 mt-2">Loading administrators...</p>
+            </div>
+          ) : admins && admins.length > 0 ? (
+            <div className="space-y-3">
+              {admins.map((admin: any) => (
+                <div key={admin.user_id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center">
+                    <div className="h-10 w-10 bg-orange-100 rounded-full flex items-center justify-center mr-3">
+                      <Shield className="h-5 w-5 text-orange-600" />
                     </div>
-                  ))}
+                    <div>
+                      <p className="font-medium text-gray-900">{admin.profiles?.username || 'Unknown User'}</p>
+                      <p className="text-sm text-gray-500">
+                        Admin since: {new Date(admin.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    Administrator
+                  </span>
                 </div>
-              ) : (
-                <div className="text-center py-8">
-                  <UserPlus className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                  <p className="text-gray-500">No moderators found</p>
-                  <p className="text-sm text-gray-400">Create your first moderator using the form above</p>
-                </div>
-              )}
-            </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <Shield className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+              <p className="text-gray-500">No administrators found</p>
+              <p className="text-sm text-gray-400">Contact system administrator to add admin users</p>
+            </div>
+          )}
+        </Card>
 
-            {/* Moderator Permissions Info */}
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold text-blue-900 mb-3">Moderator Permissions</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2">✅ What Moderators Can Do:</h4>
-                  <ul className="text-sm text-gray-700 space-y-1">
-                    <li>• Manage orders and customer communications</li>
-                    <li>• Add and edit services & products</li>
-                    <li>• Manage job postings</li>
-                    <li>• Create and manage blog posts</li>
-                    <li>• Access moderator dashboard</li>
-                  </ul>
-                </div>
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2">❌ What Moderators Cannot Do:</h4>
-                  <ul className="text-sm text-gray-700 space-y-1">
-                    <li>• Create other moderators or admins</li>
-                    <li>• Access user management</li>
-                    <li>• Modify system settings</li>
-                    <li>• Delete other moderators</li>
-                    <li>• Access admin-only features</li>
-                  </ul>
-                </div>
-              </div>
-            </Card>
-          </>
-        ) : isModerator ? (
-          <>
-            <Card className="p-6">
-              <div className="flex items-center mb-4">
-                <Shield className="h-6 w-6 text-orange-600 mr-3" />
-                <h3 className="text-lg font-semibold text-orange-900">Your Moderator Permissions</h3>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2">✅ What You Can Do:</h4>
-                  <ul className="text-sm text-gray-700 space-y-1">
-                    <li>• Manage orders and customer communications</li>
-                    <li>• Add and edit services & products</li>
-                    <li>• Manage job postings</li>
-                    <li>• Create and manage blog posts</li>
-                  </ul>
-                </div>
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2">❌ What You Cannot Do:</h4>
-                  <ul className="text-sm text-gray-700 space-y-1">
-                    <li>• Create other moderators</li>
-                    <li>• Access user management</li>
-                    <li>• Modify system settings</li>
-                    <li>• Access admin-only features</li>
-                  </ul>
-                </div>
-              </div>
-              <div className="mt-4 p-3 bg-orange-50 rounded-lg">
-                <p className="text-sm text-orange-800">
-                  <strong>Note:</strong> Only administrators can create new moderator accounts.
-                </p>
-              </div>
-            </Card>
-          </>
-        ) : null}
+        {/* Admin Permissions Info */}
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold text-blue-900 mb-3">Administrator Permissions</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h4 className="font-medium text-gray-900 mb-2">✅ Administrator Capabilities:</h4>
+              <ul className="text-sm text-gray-700 space-y-1">
+                <li>• Full user management access</li>
+                <li>• Manage orders and customer communications</li>
+                <li>• Add and edit services & products</li>
+                <li>• Manage job postings and blog posts</li>
+                <li>• Access all admin features</li>
+                <li>• System configuration and settings</li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-medium text-gray-900 mb-2">ℹ️ System Notes:</h4>
+              <ul className="text-sm text-gray-700 space-y-1">
+                <li>• Moderator system has been removed</li>
+                <li>• Simplified admin-only role structure</li>
+                <li>• Better database performance</li>
+                <li>• Reduced complexity</li>
+                <li>• Contact developer to add new admins</li>
+              </ul>
+            </div>
+          </div>
+        </Card>
       </div>
     </AdminLayout>
   );

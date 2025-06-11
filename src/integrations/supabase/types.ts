@@ -9,6 +9,24 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admins: {
+        Row: {
+          created_at: string | null
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       blog_posts: {
         Row: {
           author_id: string
@@ -361,27 +379,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_roles: {
-        Row: {
-          created_at: string
-          id: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          user_id?: string
-        }
-        Relationships: []
-      }
       user_status: {
         Row: {
           blocked_at: string | null
@@ -436,28 +433,13 @@ export type Database = {
           items: Json
         }[]
       }
-      has_role: {
-        Args: {
-          _user_id: string
-          _role: Database["public"]["Enums"]["app_role"]
-        }
-        Returns: boolean
-      }
       is_admin: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
-      is_moderator: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
-      is_moderator_or_admin: {
         Args: { _user_id: string }
         Returns: boolean
       }
     }
     Enums: {
-      app_role: "admin" | "user" | "moderator"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -572,8 +554,6 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {
-      app_role: ["admin", "user", "moderator"],
-    },
+    Enums: {},
   },
 } as const

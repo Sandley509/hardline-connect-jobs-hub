@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
@@ -6,7 +7,6 @@ interface UserProfile {
   id: string;
   username: string;
   email: string;
-  role?: 'admin' | 'moderator' | 'user';
   created_at?: string;
 }
 
@@ -19,8 +19,6 @@ interface AuthContextType {
   updateProfile: (data: Partial<UserProfile>) => void;
   changePassword: (currentPassword: string, newPassword: string) => Promise<boolean>;
   isAdmin: boolean;
-  isModerator: boolean;
-  isModeratorOrAdmin: boolean;
   loading: boolean;
 }
 
@@ -38,6 +36,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     // Set up auth state listener
@@ -53,6 +52,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           }, 0);
         } else {
           setUser(null);
+          setIsAdmin(false);
         }
         
         setLoading(false);
@@ -85,33 +85,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      // Check user role using the new functions
+      // Check if user is admin using the new admins table
       const { data: adminCheck, error: adminError } = await supabase
         .rpc('is_admin', { _user_id: authUser.id });
-
-      const { data: moderatorCheck, error: moderatorError } = await supabase
-        .rpc('is_moderator', { _user_id: authUser.id });
 
       if (adminError) {
         console.error('Error checking admin status:', adminError);
       }
-      if (moderatorError) {
-        console.error('Error checking moderator status:', moderatorError);
-      }
 
-      let userRole: 'admin' | 'moderator' | 'user' = 'user';
-      if (adminCheck) {
-        userRole = 'admin';
-      } else if (moderatorCheck) {
-        userRole = 'moderator';
-      }
+      setIsAdmin(!!adminCheck);
 
       if (profile) {
         setUser({
           id: profile.id,
           username: profile.username || 'User',
           email: authUser.email || '',
-          role: userRole,
           created_at: profile.created_at
         });
       }
@@ -152,7 +140,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.log('Starting signup process for:', email);
       console.log('Username:', username);
       
-      // First check if email confirmation is disabled
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -198,6 +185,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       await supabase.auth.signOut();
       setUser(null);
       setSession(null);
+      setIsAdmin(false);
     } catch (error) {
       console.error('Logout error:', error);
     }
@@ -253,9 +241,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       signup,
       updateProfile,
       changePassword,
-      isAdmin: user?.role === 'admin',
-      isModerator: user?.role === 'moderator',
-      isModeratorOrAdmin: user?.role === 'admin' || user?.role === 'moderator',
+      isAdmin,
       loading
     }}>
       {children}
