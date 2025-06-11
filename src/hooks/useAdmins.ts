@@ -12,7 +12,7 @@ export const useAdmins = (isAdmin: boolean) => {
         .select(`
           user_id,
           created_at,
-          profiles!inner(username)
+          profiles!user_id(username)
         `);
 
       if (error) {
