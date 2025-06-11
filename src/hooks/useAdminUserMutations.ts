@@ -107,8 +107,7 @@ export const useAdminUserMutations = () => {
       
       await Promise.all([
         supabase.from('user_status').delete().eq('user_id', userId),
-        supabase.from('user_profiles').delete().eq('user_id', userId),
-        supabase.from('user_roles').delete().eq('user_id', userId)
+        supabase.from('user_profiles').delete().eq('user_id', userId)
       ]);
 
       const { error } = await supabase

@@ -7,18 +7,18 @@ const UserDebugInfo = () => {
   const { data: debugData } = useQuery({
     queryKey: ['debug-user-data'],
     queryFn: async () => {
-      const [profilesRes, rolesRes, authUserRes] = await Promise.all([
+      const [profilesRes, adminsRes, authUserRes] = await Promise.all([
         supabase.from('profiles').select('*'),
-        supabase.from('user_roles').select('*'),
+        supabase.from('admins').select('*'),
         supabase.auth.getUser()
       ]);
 
       return {
         profiles: profilesRes.data || [],
-        roles: rolesRes.data || [],
+        admins: adminsRes.data || [],
         currentUser: authUserRes.data.user,
         profilesError: profilesRes.error,
-        rolesError: rolesRes.error
+        adminsError: adminsRes.error
       };
     }
   });
@@ -31,7 +31,7 @@ const UserDebugInfo = () => {
           <strong>Total Profiles:</strong> {debugData?.profiles.length || 0}
         </div>
         <div>
-          <strong>Total Roles:</strong> {debugData?.roles.length || 0}
+          <strong>Total Admins:</strong> {debugData?.admins.length || 0}
         </div>
         <div>
           <strong>Current User ID:</strong> {debugData?.currentUser?.id || 'None'}
@@ -41,9 +41,9 @@ const UserDebugInfo = () => {
             <strong>Profiles Error:</strong> {debugData.profilesError.message}
           </div>
         )}
-        {debugData?.rolesError && (
+        {debugData?.adminsError && (
           <div className="text-red-600">
-            <strong>Roles Error:</strong> {debugData.rolesError.message}
+            <strong>Admins Error:</strong> {debugData.adminsError.message}
           </div>
         )}
         <details className="mt-2">

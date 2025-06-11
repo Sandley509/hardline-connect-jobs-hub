@@ -7,7 +7,7 @@ interface AdminRouteProps {
 }
 
 const AdminRoute = ({ children }: AdminRouteProps) => {
-  const { user, loading, isModeratorOrAdmin } = useAuth();
+  const { user, loading, isAdmin } = useAuth();
   
   if (loading) {
     return (
@@ -21,7 +21,7 @@ const AdminRoute = ({ children }: AdminRouteProps) => {
     return <Navigate to="/login" replace />;
   }
   
-  if (!isModeratorOrAdmin) {
+  if (!isAdmin) {
     return <Navigate to="/dashboard" replace />;
   }
   
