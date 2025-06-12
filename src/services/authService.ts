@@ -78,7 +78,8 @@ export const signupUser = async (username: string, email: string, password: stri
       options: {
         data: {
           username: username
-        }
+        },
+        emailRedirectTo: 'https://hardlineconnect.store'
       }
     });
 
