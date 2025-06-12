@@ -7,6 +7,7 @@ import AdminOverviewCard from "@/components/admin/AdminOverviewCard";
 import SystemInfoCard from "@/components/admin/SystemInfoCard";
 import AdminsList from "@/components/admin/AdminsList";
 import AdminPermissionsInfo from "@/components/admin/AdminPermissionsInfo";
+import CreateModeratorForm from "@/components/admin/CreateModeratorForm";
 
 const AdminModerators = () => {
   const { isAdmin } = useAuth();
@@ -25,7 +26,7 @@ const AdminModerators = () => {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-900">
-            Administrator Management
+            Role Management
           </h1>
         </div>
 
@@ -37,6 +38,9 @@ const AdminModerators = () => {
           />
           <SystemInfoCard />
         </div>
+
+        {/* Create Moderator Form */}
+        <CreateModeratorForm />
 
         {/* Admins List */}
         <AdminsList admins={admins} isLoading={loadingAdmins} />

@@ -16,7 +16,7 @@ export const fetchUserProfile = async (authUser: User): Promise<{ user: UserProf
       return { user: null, isAdmin: false };
     }
 
-    // Check if user is admin using the new admins table
+    // Check if user has admin role using the restored role system
     const { data: adminCheck, error: adminError } = await supabase
       .rpc('is_admin', { _user_id: authUser.id });
 
