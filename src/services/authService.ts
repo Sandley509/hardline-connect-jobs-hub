@@ -21,9 +21,9 @@ export const fetchUserProfile = async (authUser: User): Promise<{ user: UserProf
       .from('admins')
       .select('user_id')
       .eq('user_id', authUser.id)
-      .single();
+      .maybeSingle();
 
-    if (adminError && adminError.code !== 'PGRST116') {
+    if (adminError) {
       console.error('Error checking admin status:', adminError);
     }
 

@@ -1,6 +1,6 @@
-
 import DashboardLayout from "@/components/DashboardLayout";
 import AdminRedirect from "@/components/AdminRedirect";
+import AdminSetup from "@/components/admin/AdminSetup";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
@@ -19,11 +19,14 @@ import {
 } from "lucide-react";
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { items, getTotalPrice, getTotalItems } = useCart();
   const [orderCount, setOrderCount] = useState(0);
   const [totalSpent, setTotalSpent] = useState(0);
   const [memberSince, setMemberSince] = useState<string>("");
+
+  // Show admin setup for your specific email
+  const showAdminSetup = user?.email === 'estaliensandley14@gmail.com' && !isAdmin;
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -59,6 +62,14 @@ const Dashboard = () => {
 
     fetchUserData();
   }, [user]);
+
+  if (showAdminSetup) {
+    return (
+      <DashboardLayout>
+        <AdminSetup />
+      </DashboardLayout>
+    );
+  }
 
   const stats = [
     {
