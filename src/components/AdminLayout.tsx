@@ -36,13 +36,13 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     navigate('/');
   };
 
-  // Define menu items based on user role - simplified to admin only
+  // Define menu items - full admin functionality restored
   const getMenuItems = () => {
     const baseItems = [
       { path: '/admin/dashboard', icon: BarChart3, label: 'Dashboard' },
     ];
 
-    // Items available to admins
+    // Items available to admins (full access restored)
     const adminItems = [
       { path: '/admin/orders', icon: Package, label: 'Order Management' },
       { path: '/admin/services', icon: Wrench, label: 'Services & Products' },

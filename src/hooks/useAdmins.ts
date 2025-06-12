@@ -8,15 +8,14 @@ export const useAdmins = (isAdmin: boolean) => {
     queryFn: async () => {
       console.log('Fetching admins list...');
       
-      // Get users with admin role from user_roles table
+      // Get users with admin role from admins table
       const { data, error } = await supabase
-        .from('user_roles')
+        .from('admins')
         .select(`
           user_id,
           created_at,
           profiles!user_id(username)
-        `)
-        .eq('role', 'admin');
+        `);
 
       if (error) {
         console.error('Error fetching admins:', error);

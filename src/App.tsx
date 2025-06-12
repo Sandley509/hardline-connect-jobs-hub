@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -29,6 +28,7 @@ import AdminOrders from "./pages/AdminOrders";
 import AdminJobs from "./pages/AdminJobs";
 import AdminBlog from "./pages/AdminBlog";
 import AdminNotifications from "./pages/AdminNotifications";
+import AdminModerators from "./pages/AdminModerators";
 import AdminRoute from "./components/AdminRoute";
 import NotFound from "./pages/NotFound";
 
@@ -61,7 +61,7 @@ function App() {
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/checkout/success" element={<CheckoutSuccess />} />
                 
-                {/* Admin Routes */}
+                {/* Admin Routes - Full functionality restored */}
                 <Route path="/admin/dashboard" element={
                   <AdminRoute>
                     <AdminDashboard />
@@ -90,6 +90,11 @@ function App() {
                 <Route path="/admin/blog" element={
                   <AdminRoute>
                     <AdminBlog />
+                  </AdminRoute>
+                } />
+                <Route path="/admin/moderators" element={
+                  <AdminRoute>
+                    <AdminModerators />
                   </AdminRoute>
                 } />
                 <Route path="/admin/notifications" element={

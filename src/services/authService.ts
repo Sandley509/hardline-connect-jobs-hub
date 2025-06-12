@@ -16,15 +16,19 @@ export const fetchUserProfile = async (authUser: User): Promise<{ user: UserProf
       return { user: null, isAdmin: false };
     }
 
-    // Check if user has admin role using the restored role system
+    // Check if user has admin role using the admins table
     const { data: adminCheck, error: adminError } = await supabase
-      .rpc('is_admin', { _user_id: authUser.id });
+      .from('admins')
+      .select('user_id')
+      .eq('user_id', authUser.id)
+      .single();
 
-    if (adminError) {
+    if (adminError && adminError.code !== 'PGRST116') {
       console.error('Error checking admin status:', adminError);
     }
 
     const isAdmin = !!adminCheck;
+    console.log('Admin check result for user', authUser.id, ':', isAdmin);
 
     const user = profile ? {
       id: profile.id,

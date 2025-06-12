@@ -1,5 +1,5 @@
 
-import AdminLayout from "@/components/AdminLayout";
+import AdminLayout from "@/components/admin/AdminLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdmins } from "@/hooks/useAdmins";
 import AccessDenied from "@/components/admin/AccessDenied";
@@ -26,7 +26,7 @@ const AdminModerators = () => {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-900">
-            Role Management
+            Administrator Management
           </h1>
         </div>
 
