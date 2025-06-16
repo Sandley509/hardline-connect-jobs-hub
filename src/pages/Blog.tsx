@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Calendar, User, Clock, ArrowRight } from "lucide-react";
+import { Calendar, User, Clock, ArrowRight, Share } from "lucide-react";
 import {
   Pagination,
   PaginationContent,
@@ -107,6 +107,14 @@ const Blog = () => {
     return text.substring(0, limit).trim() + '...';
   };
 
+  const shareOnWhatsApp = (post: BlogPost) => {
+    const currentUrl = window.location.origin + '/blog';
+    const message = `📝 *${post.title}*\n\n${post.excerpt || truncateText(post.content, 100)}\n\n👤 *Author:* ${post.author_username}\n📅 *Published:* ${formatDate(post.created_at)}\n⏱️ *Reading time:* ${getReadingTime(post.content)}\n\n🔗 Read more: ${currentUrl}`;
+    
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
   return (
     <Layout>
       <div className="bg-gradient-to-b from-orange-50 to-white">
@@ -164,9 +172,20 @@ const Blog = () => {
                           <Badge variant="secondary" className="bg-orange-100 text-orange-800">
                             Latest
                           </Badge>
-                          <div className="flex items-center text-sm text-gray-500">
-                            <Clock className="h-4 w-4 mr-1" />
-                            <span>{getReadingTime(post.content)}</span>
+                          <div className="flex items-center gap-2">
+                            <div className="flex items-center text-sm text-gray-500">
+                              <Clock className="h-4 w-4 mr-1" />
+                              <span>{getReadingTime(post.content)}</span>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => shareOnWhatsApp(post)}
+                              className="h-8 w-8 p-0 text-gray-500 hover:text-green-600"
+                              title="Share on WhatsApp"
+                            >
+                              <Share className="h-4 w-4" />
+                            </Button>
                           </div>
                         </div>
                         
