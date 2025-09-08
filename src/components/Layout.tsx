@@ -6,6 +6,7 @@ import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import CartIcon from './CartIcon';
 import CartModal from './CartModal';
+import Footer from './Footer';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -232,6 +233,8 @@ const Layout = ({ children }: LayoutProps) => {
       </nav>
       
       <main>{children}</main>
+      
+      <Footer />
       
       <CartModal isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </div>

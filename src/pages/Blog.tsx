@@ -117,14 +117,14 @@ const Blog = () => {
 
   return (
     <Layout>
-      <div className="bg-gradient-to-b from-orange-50 to-white">
+      <div className="bg-gradient-to-b from-primary/5 to-background">
         {/* Hero Section */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center mb-16">
-            <h1 className="text-5xl font-bold text-gray-900 mb-6">
-              Our <span className="text-orange-600">Blog</span>
+            <h1 className="text-5xl font-bold text-foreground mb-6">
+              Our <span className="text-primary">Blog</span>
             </h1>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
               Discover the latest insights, industry trends, and expert tips from the Hardline Connect team. 
               Stay ahead with our comprehensive guides and thought leadership articles.
             </p>
@@ -133,16 +133,16 @@ const Blog = () => {
           {/* Featured Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
             <div className="text-center">
-              <div className="text-3xl font-bold text-orange-600 mb-2">{postsData?.totalCount || 0}</div>
-              <div className="text-gray-600">Articles Published</div>
+              <div className="text-3xl font-bold text-primary mb-2">{postsData?.totalCount || 0}</div>
+              <div className="text-muted-foreground">Articles Published</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-orange-600 mb-2">50K+</div>
-              <div className="text-gray-600">Monthly Readers</div>
+              <div className="text-3xl font-bold text-primary mb-2">50K+</div>
+              <div className="text-muted-foreground">Monthly Readers</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-orange-600 mb-2">Expert</div>
-              <div className="text-gray-600">Industry Insights</div>
+              <div className="text-3xl font-bold text-primary mb-2">Expert</div>
+              <div className="text-muted-foreground">Industry Insights</div>
             </div>
           </div>
         </div>
@@ -151,7 +151,7 @@ const Blog = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
           {isLoading ? (
             <div className="flex justify-center py-16">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
             </div>
           ) : posts.length > 0 ? (
             <>
@@ -169,11 +169,11 @@ const Blog = () => {
                     >
                       <CardHeader className="pb-4">
                         <div className="flex items-center justify-between mb-3">
-                          <Badge variant="secondary" className="bg-orange-100 text-orange-800">
+                          <Badge variant="secondary" className="bg-primary/10 text-primary">
                             Latest
                           </Badge>
                           <div className="flex items-center gap-2">
-                            <div className="flex items-center text-sm text-gray-500">
+                            <div className="flex items-center text-sm text-muted-foreground">
                               <Clock className="h-4 w-4 mr-1" />
                               <span>{getReadingTime(post.content)}</span>
                             </div>
@@ -181,7 +181,7 @@ const Blog = () => {
                               variant="ghost"
                               size="sm"
                               onClick={() => shareOnWhatsApp(post)}
-                              className="h-8 w-8 p-0 text-gray-500 hover:text-green-600"
+                              className="h-8 w-8 p-0 text-muted-foreground hover:text-green-600"
                               title="Share on WhatsApp"
                             >
                               <Share className="h-4 w-4" />
@@ -189,13 +189,13 @@ const Blog = () => {
                           </div>
                         </div>
                         
-                        <h2 className={`font-bold text-gray-900 mb-3 group-hover:text-orange-600 transition-colors ${
+                        <h2 className={`font-bold text-foreground mb-3 group-hover:text-primary transition-colors ${
                           isLarge ? 'text-2xl lg:text-3xl' : 'text-xl'
                         }`}>
                           {post.title}
                         </h2>
                         
-                        <div className="flex items-center space-x-4 text-sm text-gray-500">
+                        <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                           <div className="flex items-center">
                             <User className="h-4 w-4 mr-1" />
                             <span className="font-medium">{post.author_username}</span>
@@ -209,14 +209,14 @@ const Blog = () => {
                       
                       <CardContent className="pt-0">
                         {post.excerpt && (
-                          <p className="text-gray-600 text-lg leading-relaxed mb-4">
+                          <p className="text-muted-foreground text-lg leading-relaxed mb-4">
                             {post.excerpt}
                           </p>
                         )}
                         
                         <div className="prose prose-gray max-w-none">
                           <div 
-                            className="text-gray-700 leading-relaxed mb-4"
+                            className="text-foreground leading-relaxed mb-4"
                             dangerouslySetInnerHTML={{ 
                               __html: isExpanded 
                                 ? post.content.replace(/\n/g, '<br>') 
@@ -228,7 +228,7 @@ const Blog = () => {
                         <Button 
                           variant="ghost" 
                           onClick={() => toggleExpanded(post.id)}
-                          className="p-0 h-auto text-orange-600 hover:text-orange-700 font-medium"
+                          className="p-0 h-auto text-primary hover:text-primary/80 font-medium"
                         >
                           {isExpanded ? 'Read Less' : 'Read More'}
                           <ArrowRight className="h-4 w-4 ml-1 transition-transform group-hover:translate-x-1" />
@@ -278,8 +278,8 @@ const Blog = () => {
             <div className="text-center py-16">
               <div className="max-w-md mx-auto">
                 <div className="text-6xl mb-4">📝</div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">No Articles Yet</h3>
-                <p className="text-gray-600 text-lg">
+                <h3 className="text-2xl font-bold text-foreground mb-4">No Articles Yet</h3>
+                <p className="text-muted-foreground text-lg">
                   We're working on some amazing content for you. Check back soon for insightful articles and industry updates!
                 </p>
               </div>
@@ -288,19 +288,19 @@ const Blog = () => {
         </div>
 
         {/* Newsletter Section */}
-        <div className="bg-gray-900 text-white py-16">
+        <div className="bg-card border-t border-border text-foreground py-16">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 className="text-3xl font-bold mb-4">Stay Updated</h2>
-            <p className="text-xl text-gray-300 mb-8">
+            <p className="text-xl text-muted-foreground mb-8">
               Get the latest articles and insights delivered straight to your inbox.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
               <input 
                 type="email" 
                 placeholder="Enter your email"
-                className="flex-1 px-4 py-3 rounded-lg text-gray-900 border-0 focus:ring-2 focus:ring-orange-500"
+                className="flex-1 px-4 py-3 rounded-lg text-foreground bg-background border border-border focus:ring-2 focus:ring-primary"
               />
-              <Button className="bg-orange-600 hover:bg-orange-700 px-8 py-3">
+              <Button className="bg-primary hover:bg-primary/90 px-8 py-3">
                 Subscribe
               </Button>
             </div>

@@ -45,7 +45,7 @@ const AdminDashboard = () => {
     <AdminLayout>
       <div className="space-y-6">
         {/* Welcome Section */}
-        <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg p-6 text-white">
+        <div className="bg-gradient-to-r from-primary to-primary/80 rounded-lg p-6 text-primary-foreground">
           <div className="flex items-center space-x-3">
             <Shield className="h-8 w-8" />
             <div>
@@ -79,13 +79,13 @@ const AdminDashboard = () => {
 
         {/* Admin Information */}
         <Card className="p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          <h2 className="text-xl font-semibold text-foreground mb-4">
             Administrator Capabilities
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <h3 className="font-medium text-gray-900">Content Management</h3>
-              <ul className="text-sm text-gray-600 space-y-1">
+              <h3 className="font-medium text-foreground">Content Management</h3>
+              <ul className="text-sm text-muted-foreground space-y-1">
                 <li>• Manage services and products</li>
                 <li>• Create and edit blog posts</li>
                 <li>• Handle job postings</li>
@@ -93,8 +93,8 @@ const AdminDashboard = () => {
               </ul>
             </div>
             <div className="space-y-2">
-              <h3 className="font-medium text-gray-900">Administrative Control</h3>
-              <ul className="text-sm text-gray-600 space-y-1">
+              <h3 className="font-medium text-foreground">Administrative Control</h3>
+              <ul className="text-sm text-muted-foreground space-y-1">
                 <li>• Full user management access</li>
                 <li>• System-wide notifications</li>
                 <li>• Complete platform oversight</li>
