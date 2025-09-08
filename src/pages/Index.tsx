@@ -5,6 +5,7 @@ import Layout from "@/components/Layout";
 import HeroSection from "@/components/HeroSection";
 import JobList from "@/components/JobList";
 import AdsSidebar from "@/components/AdsSidebar";
+import TrustSignals from "@/components/TrustSignals";
 
 const Index = () => {
   const location = useLocation();
@@ -40,6 +41,11 @@ const Index = () => {
 
       <div className="bg-background py-16 md:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Trust Signals Section */}
+          <div className="mb-16">
+            <TrustSignals />
+          </div>
+          
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 lg:gap-12">
             <div className="lg:col-span-3">
               <JobList highlightedJobId={highlightedJobId} />

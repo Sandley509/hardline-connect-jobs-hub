@@ -47,6 +47,12 @@ const Layout = ({ children }: LayoutProps) => {
               <Link to="/saved-jobs" className="text-muted-foreground hover:text-primary font-medium transition-colors">
                 Saved Jobs
               </Link>
+              <Link to="/security" className="text-muted-foreground hover:text-primary font-medium transition-colors">
+                Security
+              </Link>
+              <Link to="/servers" className="text-muted-foreground hover:text-primary font-medium transition-colors">
+                Servers
+              </Link>
               <Link to="/ip-pricing" className="text-muted-foreground hover:text-primary font-medium transition-colors">
                 IP Pricing
               </Link>
@@ -133,6 +139,20 @@ const Layout = ({ children }: LayoutProps) => {
                   onClick={closeMobileMenu}
                 >
                   Saved Jobs
+                </Link>
+                <Link 
+                  to="/security" 
+                  className="block px-3 py-2 text-muted-foreground hover:text-primary transition-colors"
+                  onClick={closeMobileMenu}
+                >
+                  Security
+                </Link>
+                <Link 
+                  to="/servers" 
+                  className="block px-3 py-2 text-muted-foreground hover:text-primary transition-colors"
+                  onClick={closeMobileMenu}
+                >
+                  Servers
                 </Link>
                 <Link 
                   to="/ip-pricing" 
