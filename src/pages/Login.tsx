@@ -66,7 +66,7 @@ const Login = () => {
 
   return (
     <Layout>
-      <div className="min-h-[calc(100vh-200px)] flex items-center justify-center bg-gradient-to-br from-orange-50 to-orange-100 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-[calc(100vh-200px)] flex items-center justify-center bg-gradient-to-br from-primary/5 to-primary/10 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
           <div className="text-center">
             <img 
@@ -74,19 +74,19 @@ const Login = () => {
               alt="Hardline Connect Logo" 
               className="h-16 w-auto mx-auto mb-4"
             />
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">
+            <h2 className="text-3xl font-bold text-foreground mb-2">
               Welcome Back
             </h2>
-            <p className="text-gray-600">
+            <p className="text-muted-foreground">
               Sign in to your Hardline Connect account
             </p>
           </div>
 
-          <div className="bg-white rounded-xl shadow-lg p-8">
+          <div className="bg-card rounded-xl shadow-lg border p-8">
             {emailNotConfirmed && (
-              <Alert className="mb-6 border-orange-200 bg-orange-50">
-                <AlertCircle className="h-4 w-4 text-orange-600" />
-                <AlertDescription className="text-orange-800">
+              <Alert className="mb-6 border-primary/20 bg-primary/5">
+                <AlertCircle className="h-4 w-4 text-primary" />
+                <AlertDescription className="text-foreground">
                   <strong>Email confirmation required!</strong> Please check your email inbox and click the confirmation link before trying to log in. 
                   Don't forget to check your spam folder. Once confirmed, you can return here to log in.
                 </AlertDescription>
@@ -95,17 +95,17 @@ const Login = () => {
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <Label htmlFor="email" className="text-gray-700 font-medium">
+                <Label htmlFor="email" className="text-foreground font-medium">
                   Email Address
                 </Label>
                 <div className="mt-1 relative">
-                  <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                  <Mail className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
                   <Input
                     id="email"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 border-gray-300 focus:border-orange-500 focus:ring-orange-500"
+                    className="pl-10"
                     placeholder="Enter your email"
                     required
                   />
@@ -113,24 +113,24 @@ const Login = () => {
               </div>
 
               <div>
-                <Label htmlFor="password" className="text-gray-700 font-medium">
+                <Label htmlFor="password" className="text-foreground font-medium">
                   Password
                 </Label>
                 <div className="mt-1 relative">
-                  <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                  <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 pr-10 border-gray-300 focus:border-orange-500 focus:ring-orange-500"
+                    className="pl-10 pr-10"
                     placeholder="Enter your password"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors"
                   >
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
@@ -140,7 +140,7 @@ const Login = () => {
               <div className="flex items-center justify-between">
                 <Link 
                   to="/forgot-password" 
-                  className="text-sm text-orange-600 hover:text-orange-500"
+                  className="text-sm text-primary hover:text-primary/80 transition-colors"
                 >
                   Forgot your password?
                 </Link>
@@ -149,18 +149,18 @@ const Login = () => {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3"
+                className="w-full py-3"
               >
                 {isLoading ? 'Signing In...' : 'Sign In'}
               </Button>
             </form>
 
             <div className="mt-6 text-center">
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 Don't have an account?{' '}
                 <Link 
                   to="/signup" 
-                  className="text-orange-600 hover:text-orange-500 font-medium"
+                  className="text-primary hover:text-primary/80 font-medium transition-colors"
                 >
                   Sign up here
                 </Link>
