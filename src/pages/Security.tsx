@@ -170,6 +170,107 @@ const Security = () => {
             </Card>
           </div>
 
+          {/* Detailed Security Principles */}
+          <div className="mb-16">
+            <h2 className="text-3xl font-bold text-center mb-8">Our Security Principles</h2>
+            <p className="text-lg text-muted-foreground text-center mb-12">
+              At Hardline Connect, security isn't an afterthought—it's the foundation of everything we build.
+            </p>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Globe className="h-5 w-5" />
+                    Network Security
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h4 className="font-semibold mb-2">Military-Grade Encryption</h4>
+                    <p className="text-sm text-muted-foreground">We use AES-256 encryption to secure your internet traffic, the same standard trusted by governments and security experts worldwide.</p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-2">Secure Protocols</h4>
+                    <p className="text-sm text-muted-foreground">We support multiple VPN protocols including WireGuard® and OpenVPN to provide a blend of speed and impenetrable security.</p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-2">Network Lock (Kill Switch)</h4>
+                    <p className="text-sm text-muted-foreground">Our application includes a kill switch feature that blocks all internet traffic if your VPN connection drops unexpectedly, preventing data leaks.</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Server className="h-5 w-5" />
+                    Infrastructure Security
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h4 className="font-semibold mb-2">No-Logs Policy</h4>
+                    <p className="text-sm text-muted-foreground">We do not track or record any information regarding your VPN usage. We have designed our systems to be incapable of storing connection logs.</p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-2">RAM-Only Servers</h4>
+                    <p className="text-sm text-muted-foreground">Where possible, our servers run on volatile memory (RAM). This means all data is wiped clean with every reboot, leaving no trace of user activity.</p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-2">Physical Security</h4>
+                    <p className="text-sm text-muted-foreground">Our servers are hosted in top-tier, ISO-certified data centers with 24/7 monitoring, biometric access controls, and robust physical security.</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Key className="h-5 w-5" />
+                    Account & Access Security
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h4 className="font-semibold mb-2">Hashed Passwords</h4>
+                    <p className="text-sm text-muted-foreground">Your account password is hashed using bcrypt, making it unreadable to us and anyone else.</p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-2">Two-Factor Authentication (2FA)</h4>
+                    <p className="text-sm text-muted-foreground">We offer 2FA to add an extra layer of security to your Hardline Connect account.</p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-2">Secure Payment Processing</h4>
+                    <p className="text-sm text-muted-foreground">All payments are processed by PCI-DSS compliant third-party processors. We never store your full payment card information on our servers.</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Shield className="h-5 w-5" />
+                    Vulnerability Management
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-foreground mb-4">
+                    We are committed to transparency. If you discover a vulnerability in our service, we encourage you to report it to us responsibly.
+                  </p>
+                  <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
+                    <p className="text-foreground font-medium">
+                      <strong>Security Contact:</strong> security@hardlineconnect.store
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      We work quickly to address all valid security concerns.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
           {/* Trust Indicators */}
           <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20 mb-16">
             <CardContent className="p-8">

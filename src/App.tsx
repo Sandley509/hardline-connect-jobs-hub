@@ -34,6 +34,8 @@ import SavedJobs from "./pages/SavedJobs";
 import Security from "./pages/Security";
 import ServerMap from "./pages/ServerMap";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
+import CookiePolicy from "./pages/CookiePolicy";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -66,6 +68,8 @@ function App() {
                 <Route path="/security" element={<Security />} />
                 <Route path="/servers" element={<ServerMap />} />
                 <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/terms" element={<TermsOfService />} />
+                <Route path="/cookies" element={<CookiePolicy />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/checkout/success" element={<CheckoutSuccess />} />
                 
