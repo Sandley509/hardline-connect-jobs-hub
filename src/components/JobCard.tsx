@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, MapPin, Clock, DollarSign, Share2, Tag } from "lucide-react";
+import { ExternalLink, MapPin, Clock, DollarSign, Share2, Bookmark, BookmarkCheck } from "lucide-react";
 
 interface JobLink {
   id: string;
@@ -19,10 +19,23 @@ interface JobCardProps {
   job: JobLink;
   onShare: (job: JobLink) => void;
   onApply: (job: JobLink) => void;
+  onSave?: (job: JobLink) => void;
+  onUnsave?: (job: JobLink) => void;
+  onJobClick?: (job: JobLink) => void;
   isHighlighted?: boolean;
+  isSaved?: boolean;
 }
 
-const JobCard = ({ job, onShare, onApply, isHighlighted }: JobCardProps) => {
+const JobCard = ({ 
+  job, 
+  onShare, 
+  onApply, 
+  onSave,
+  onUnsave,
+  onJobClick,
+  isHighlighted,
+  isSaved = false 
+}: JobCardProps) => {
   const getCategoryDisplayName = (category: string) => {
     switch (category) {
       case 'customer_service':
@@ -45,8 +58,24 @@ const JobCard = ({ job, onShare, onApply, isHighlighted }: JobCardProps) => {
     }
   };
 
+  const handleSaveToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isSaved) {
+      onUnsave?.(job);
+    } else {
+      onSave?.(job);
+    }
+  };
+
+  const handleCardClick = () => {
+    onJobClick?.(job);
+  };
+
   return (
-    <Card className={`hover:shadow-lg transition-all duration-300 hover:-translate-y-1 ${isHighlighted ? 'bg-teal-50 border-teal-200' : ''}`}>
+    <Card 
+      className={`hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer ${isHighlighted ? 'bg-teal-50 border-teal-200' : ''}`}
+      onClick={handleCardClick}
+    >
       <CardHeader>
         <div className="flex flex-col md:flex-row md:justify-between md:items-start space-y-4 md:space-y-0">
           <div className="flex-1">
@@ -64,18 +93,44 @@ const JobCard = ({ job, onShare, onApply, isHighlighted }: JobCardProps) => {
           </div>
           <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
             <Button 
-              onClick={() => onShare(job)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onShare(job);
+              }}
               variant="outline" 
+              size="sm"
               className="border-green-500 text-green-600 hover:bg-green-50 w-full sm:w-auto"
             >
               <Share2 className="mr-2 h-4 w-4" />
-              Share on WhatsApp
+              Share
             </Button>
             <Button 
-              onClick={() => onApply(job)}
+              onClick={handleSaveToggle}
+              variant="outline" 
+              size="sm"
+              className="w-full sm:w-auto"
+            >
+              {isSaved ? (
+                <>
+                  <BookmarkCheck className="mr-2 h-4 w-4" />
+                  Saved
+                </>
+              ) : (
+                <>
+                  <Bookmark className="mr-2 h-4 w-4" />
+                  Save
+                </>
+              )}
+            </Button>
+            <Button 
+              onClick={(e) => {
+                e.stopPropagation();
+                onApply(job);
+              }}
+              size="sm"
               className="bg-teal-600 hover:bg-teal-700 w-full sm:w-auto"
             >
-              Apply Now <ExternalLink className="ml-2 h-4 w-4" />
+              Apply <ExternalLink className="ml-2 h-4 w-4" />
             </Button>
           </div>
         </div>

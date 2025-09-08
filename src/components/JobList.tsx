@@ -6,6 +6,9 @@ import JobCard from "./JobCard";
 import JobPagination from "./JobPagination";
 import MobileAds from "./MobileAds";
 import JobCategoryFilter from "./JobCategoryFilter";
+import JobAdvancedFilters, { JobFilters } from "./JobAdvancedFilters";
+import JobDetailModal from "./JobDetailModal";
+import { useSavedJobs } from "@/hooks/useSavedJobs";
 
 interface JobLink {
   id: string;
@@ -26,7 +29,21 @@ interface JobListProps {
 const JobList = ({ highlightedJobId }: JobListProps) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedJob, setSelectedJob] = useState<JobLink | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const itemsPerPage = 6;
+
+  // Advanced filters state
+  const [filters, setFilters] = useState<JobFilters>({
+    search: '',
+    category: 'all',
+    jobType: 'all',
+    salaryRange: 'all',
+    location: 'all'
+  });
+
+  // Saved jobs functionality
+  const { saveJob, unsaveJob, isJobSaved } = useSavedJobs();
 
   const { data: jobLinks = [], isLoading } = useQuery({
     queryKey: ['jobs'],
@@ -45,10 +62,60 @@ const JobList = ({ highlightedJobId }: JobListProps) => {
     }
   });
 
-  // Filter jobs by category
-  const filteredJobs = selectedCategory === 'all' 
-    ? jobLinks 
-    : jobLinks.filter(job => job.category === selectedCategory);
+  // Advanced filtering logic
+  const filteredJobs = jobLinks.filter(job => {
+    // Search filter
+    if (filters.search) {
+      const searchTerm = filters.search.toLowerCase();
+      const searchableText = `${job.title} ${job.company} ${job.description}`.toLowerCase();
+      if (!searchableText.includes(searchTerm)) return false;
+    }
+
+    // Category filter
+    const categoryToCheck = filters.category !== 'all' ? filters.category : selectedCategory;
+    if (categoryToCheck !== 'all' && job.category !== categoryToCheck) return false;
+
+    // Job type filter
+    if (filters.jobType !== 'all' && job.type.toLowerCase() !== filters.jobType) return false;
+
+    // Location filter
+    if (filters.location !== 'all') {
+      if (filters.location === 'remote' && !job.location.toLowerCase().includes('remote')) return false;
+      if (filters.location === 'hybrid' && !job.location.toLowerCase().includes('hybrid')) return false;
+      if (filters.location !== 'remote' && filters.location !== 'hybrid') {
+        // For specific regions, this would need more sophisticated matching
+        // For now, we'll do a simple includes check
+        if (!job.location.toLowerCase().includes(filters.location)) return false;
+      }
+    }
+
+    // Salary range filter (basic implementation)
+    if (filters.salaryRange !== 'all' && job.salary) {
+      const salaryNumbers = job.salary.match(/\d+/g);
+      if (salaryNumbers && salaryNumbers.length > 0) {
+        const salary = parseInt(salaryNumbers[0]);
+        switch (filters.salaryRange) {
+          case '0-30000':
+            if (salary > 30000) return false;
+            break;
+          case '30000-50000':
+            if (salary < 30000 || salary > 50000) return false;
+            break;
+          case '50000-70000':
+            if (salary < 50000 || salary > 70000) return false;
+            break;
+          case '70000-100000':
+            if (salary < 70000 || salary > 100000) return false;
+            break;
+          case '100000+':
+            if (salary < 100000) return false;
+            break;
+        }
+      }
+    }
+
+    return true;
+  });
 
   // Calculate counts for each category
   const customerServiceCount = jobLinks.filter(job => job.category === 'customer_service').length;
@@ -63,7 +130,35 @@ const JobList = ({ highlightedJobId }: JobListProps) => {
   // Reset to page 1 when category changes
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
+    setFilters(prev => ({ ...prev, category }));
     setCurrentPage(1);
+  };
+
+  // Handle filter changes
+  const handleFiltersChange = (newFilters: JobFilters) => {
+    setFilters(newFilters);
+    setSelectedCategory(newFilters.category);
+    setCurrentPage(1);
+  };
+
+  // Clear all filters
+  const handleClearFilters = () => {
+    const clearedFilters: JobFilters = {
+      search: '',
+      category: 'all',
+      jobType: 'all',
+      salaryRange: 'all',
+      location: 'all'
+    };
+    setFilters(clearedFilters);
+    setSelectedCategory('all');
+    setCurrentPage(1);
+  };
+
+  // Handle job card click to open modal
+  const handleJobClick = (job: JobLink) => {
+    setSelectedJob(job);
+    setIsModalOpen(true);
   };
 
   const nextPage = () => {
@@ -111,6 +206,13 @@ const JobList = ({ highlightedJobId }: JobListProps) => {
         </p>
       </div>
 
+      <JobAdvancedFilters
+        filters={filters}
+        onFiltersChange={handleFiltersChange}
+        onClearFilters={handleClearFilters}
+        jobCount={filteredJobs.length}
+      />
+
       <JobCategoryFilter
         selectedCategory={selectedCategory}
         onCategoryChange={handleCategoryChange}
@@ -135,7 +237,11 @@ const JobList = ({ highlightedJobId }: JobListProps) => {
                 job={job}
                 onShare={shareJobOnWhatsApp}
                 onApply={handleApplyNow}
+                onSave={saveJob}
+                onUnsave={unsaveJob}
+                onJobClick={handleJobClick}
                 isHighlighted={highlightedJobId === job.id}
+                isSaved={isJobSaved(job.id)}
               />
             </div>
           ))}
@@ -158,6 +264,18 @@ const JobList = ({ highlightedJobId }: JobListProps) => {
       />
 
       <MobileAds />
+
+      {/* Job Detail Modal */}
+      <JobDetailModal
+        job={selectedJob}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onShare={shareJobOnWhatsApp}
+        onApply={handleApplyNow}
+        onSave={saveJob}
+        onUnsave={unsaveJob}
+        isSaved={selectedJob ? isJobSaved(selectedJob.id) : false}
+      />
     </div>
   );
 };

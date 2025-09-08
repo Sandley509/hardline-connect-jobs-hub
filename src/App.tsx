@@ -30,6 +30,7 @@ import AdminBlog from "./pages/AdminBlog";
 import AdminNotifications from "./pages/AdminNotifications";
 import AdminModerators from "./pages/AdminModerators";
 import AdminRoute from "./components/AdminRoute";
+import SavedJobs from "./pages/SavedJobs";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -58,6 +59,7 @@ function App() {
                 <Route path="/dashboard/profile" element={<DashboardProfile />} />
                 <Route path="/dashboard/orders" element={<DashboardOrders />} />
                 <Route path="/dashboard/settings" element={<DashboardSettings />} />
+                <Route path="/saved-jobs" element={<SavedJobs />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/checkout/success" element={<CheckoutSuccess />} />
                 

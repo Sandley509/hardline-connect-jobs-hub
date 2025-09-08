@@ -44,6 +44,9 @@ const Layout = ({ children }: LayoutProps) => {
               <Link to="/services" className="text-muted-foreground hover:text-primary font-medium transition-colors">
                 Services
               </Link>
+              <Link to="/saved-jobs" className="text-muted-foreground hover:text-primary font-medium transition-colors">
+                Saved Jobs
+              </Link>
               <Link to="/ip-pricing" className="text-muted-foreground hover:text-primary font-medium transition-colors">
                 IP Pricing
               </Link>
@@ -123,6 +126,13 @@ const Layout = ({ children }: LayoutProps) => {
                   onClick={closeMobileMenu}
                 >
                   Services
+                </Link>
+                <Link 
+                  to="/saved-jobs" 
+                  className="block px-3 py-2 text-muted-foreground hover:text-primary transition-colors"
+                  onClick={closeMobileMenu}
+                >
+                  Saved Jobs
                 </Link>
                 <Link 
                   to="/ip-pricing" 
