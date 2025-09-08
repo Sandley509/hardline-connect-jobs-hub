@@ -28,33 +28,33 @@ const Layout = ({ children }: LayoutProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm border-b">
+    <div className="min-h-screen bg-background">
+      <nav className="bg-card shadow-sm border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo - Increased size */}
             <div className="flex items-center">
-              <Link to="/" className="text-2xl md:text-3xl font-bold text-orange-600">
+              <Link to="/" className="text-2xl md:text-3xl font-bold text-primary">
                 Hardline Connect
               </Link>
             </div>
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-8">
-              <Link to="/services" className="text-gray-700 hover:text-orange-600">
-                Services
+              <Link to="/" className="text-muted-foreground hover:text-primary font-medium transition-colors">
+                Home
               </Link>
-              <Link to="/ip-pricing" className="text-gray-700 hover:text-orange-600">
-                IP Pricing
+              <Link to="/services" className="text-muted-foreground hover:text-primary font-medium transition-colors">
+                Features
               </Link>
-              <Link to="/shop" className="text-gray-700 hover:text-orange-600">
-                Shop
+              <Link to="/ip-pricing" className="text-muted-foreground hover:text-primary font-medium transition-colors">
+                Pricing
               </Link>
-              <Link to="/blog" className="text-gray-700 hover:text-orange-600">
+              <Link to="/contact" className="text-muted-foreground hover:text-primary font-medium transition-colors">
+                Support
+              </Link>
+              <Link to="/blog" className="text-muted-foreground hover:text-primary font-medium transition-colors">
                 Blog
-              </Link>
-              <Link to="/contact" className="text-gray-700 hover:text-orange-600">
-                Contact
               </Link>
             </div>
             
@@ -66,14 +66,14 @@ const Layout = ({ children }: LayoutProps) => {
                 <div className="flex items-center space-x-4">
                   <Link 
                     to="/dashboard" 
-                    className="flex items-center text-gray-700 hover:text-orange-600"
+                    className="flex items-center text-muted-foreground hover:text-primary font-medium transition-colors"
                   >
                     <User className="h-5 w-5 mr-1" />
                     Dashboard
                   </Link>
                   <button
                     onClick={handleSignOut}
-                    className="flex items-center text-gray-700 hover:text-orange-600"
+                    className="flex items-center text-muted-foreground hover:text-primary font-medium transition-colors"
                   >
                     <LogOut className="h-5 w-5 mr-1" />
                     Sign Out
@@ -83,15 +83,15 @@ const Layout = ({ children }: LayoutProps) => {
                 <div className="flex items-center space-x-4">
                   <Link 
                     to="/login" 
-                    className="text-gray-700 hover:text-orange-600"
+                    className="text-muted-foreground hover:text-primary font-medium transition-colors"
                   >
                     Login
                   </Link>
                   <Link 
                     to="/signup" 
-                    className="bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700"
+                    className="bg-primary text-primary-foreground px-6 py-2 rounded-md hover:bg-primary/90 font-semibold transition-colors shadow-sm"
                   >
-                    Sign Up
+                    Get Protected
                   </Link>
                 </div>
               )}
@@ -102,7 +102,7 @@ const Layout = ({ children }: LayoutProps) => {
               <CartIcon onClick={() => setIsCartOpen(true)} />
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="text-gray-700 hover:text-orange-600 p-2"
+                className="text-muted-foreground hover:text-primary p-2 transition-colors"
               >
                 {isMobileMenuOpen ? (
                   <X className="h-6 w-6" />
@@ -115,51 +115,51 @@ const Layout = ({ children }: LayoutProps) => {
 
           {/* Mobile Navigation Menu */}
           {isMobileMenuOpen && (
-            <div className="md:hidden bg-white border-t border-gray-200">
+        <div className="md:hidden bg-card border-t border-border">
               <div className="px-2 pt-2 pb-3 space-y-1">
                 <Link 
-                  to="/services" 
-                  className="block px-3 py-2 text-gray-700 hover:text-orange-600"
+                  to="/" 
+                  className="block px-3 py-2 text-muted-foreground hover:text-primary font-medium transition-colors"
                   onClick={closeMobileMenu}
                 >
-                  Services
+                  Home
+                </Link>
+                <Link 
+                  to="/services" 
+                  className="block px-3 py-2 text-muted-foreground hover:text-primary font-medium transition-colors"
+                  onClick={closeMobileMenu}
+                >
+                  Features
                 </Link>
                 <Link 
                   to="/ip-pricing" 
-                  className="block px-3 py-2 text-gray-700 hover:text-orange-600"
+                  className="block px-3 py-2 text-muted-foreground hover:text-primary font-medium transition-colors"
                   onClick={closeMobileMenu}
                 >
-                  IP Pricing
+                  Pricing
                 </Link>
                 <Link 
-                  to="/shop" 
-                  className="block px-3 py-2 text-gray-700 hover:text-orange-600"
+                  to="/contact" 
+                  className="block px-3 py-2 text-muted-foreground hover:text-primary font-medium transition-colors"
                   onClick={closeMobileMenu}
                 >
-                  Shop
+                  Support
                 </Link>
                 <Link 
                   to="/blog" 
-                  className="block px-3 py-2 text-gray-700 hover:text-orange-600"
+                  className="block px-3 py-2 text-muted-foreground hover:text-primary font-medium transition-colors"
                   onClick={closeMobileMenu}
                 >
                   Blog
                 </Link>
-                <Link 
-                  to="/contact" 
-                  className="block px-3 py-2 text-gray-700 hover:text-orange-600"
-                  onClick={closeMobileMenu}
-                >
-                  Contact
-                </Link>
                 
                 {/* Mobile Auth Section */}
-                <div className="border-t border-gray-200 pt-4 mt-4">
+                <div className="border-t border-border pt-4 mt-4">
                   {user ? (
                     <>
                       <Link 
                         to="/dashboard" 
-                        className="block px-3 py-2 text-gray-700 hover:text-orange-600"
+                        className="block px-3 py-2 text-muted-foreground hover:text-primary font-medium transition-colors"
                         onClick={closeMobileMenu}
                       >
                         <User className="h-5 w-5 inline mr-2" />
@@ -170,7 +170,7 @@ const Layout = ({ children }: LayoutProps) => {
                           handleSignOut();
                           closeMobileMenu();
                         }}
-                        className="block w-full text-left px-3 py-2 text-gray-700 hover:text-orange-600"
+                        className="block w-full text-left px-3 py-2 text-muted-foreground hover:text-primary font-medium transition-colors"
                       >
                         <LogOut className="h-5 w-5 inline mr-2" />
                         Sign Out
@@ -180,17 +180,17 @@ const Layout = ({ children }: LayoutProps) => {
                     <>
                       <Link 
                         to="/login" 
-                        className="block px-3 py-2 text-gray-700 hover:text-orange-600"
+                        className="block px-3 py-2 text-muted-foreground hover:text-primary font-medium transition-colors"
                         onClick={closeMobileMenu}
                       >
                         Login
                       </Link>
                       <Link 
                         to="/signup" 
-                        className="block mx-3 my-2 bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 text-center"
+                        className="block mx-3 my-2 bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 font-semibold text-center transition-colors"
                         onClick={closeMobileMenu}
                       >
-                        Sign Up
+                        Get Protected
                       </Link>
                     </>
                   )}
