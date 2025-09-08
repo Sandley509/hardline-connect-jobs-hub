@@ -38,13 +38,17 @@ const Index = () => {
     <Layout>
       <HeroSection />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8">
-          <JobList highlightedJobId={highlightedJobId} />
+      <div className="bg-background py-16 md:py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 lg:gap-12">
+            <div className="lg:col-span-3">
+              <JobList highlightedJobId={highlightedJobId} />
+            </div>
 
-          {/* Desktop Sidebar with Ads */}
-          <div className="lg:col-span-1 order-first lg:order-last hidden lg:block">
-            <AdsSidebar />
+            {/* Desktop Sidebar with Ads */}
+            <div className="lg:col-span-1 order-first lg:order-last hidden lg:block">
+              <AdsSidebar />
+            </div>
           </div>
         </div>
       </div>

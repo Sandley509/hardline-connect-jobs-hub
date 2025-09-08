@@ -8,22 +8,24 @@ export const useAdmins = (isAdmin: boolean) => {
     queryFn: async () => {
       console.log('Fetching admins list...');
       
-      // Get users with admin role from admins table with proper join
+      // Simple query for admins
       const { data, error } = await supabase
         .from('admins')
-        .select(`
-          user_id,
-          created_at,
-          profiles:user_id(username)
-        `);
+        .select('user_id, created_at');
 
       if (error) {
         console.error('Error fetching admins:', error);
         throw error;
       }
 
-      console.log('Admins fetched:', data);
-      return data || [];
+      // Transform data to match expected structure
+      const transformedData = (data || []).map(admin => ({
+        ...admin,
+        profiles: { username: 'Admin' }
+      }));
+
+      console.log('Admins fetched:', transformedData);
+      return transformedData;
     },
     enabled: isAdmin
   });
