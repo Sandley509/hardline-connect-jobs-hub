@@ -27,29 +27,78 @@ const HeroSection = () => {
             </Button>
           </div>
           
-          {/* Visual Element */}
+          {/* Enhanced Visual Element */}
           <div className="relative lg:order-last">
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
-              <div className="space-y-4">
-                <div className="h-4 bg-white/30 rounded w-3/4"></div>
-                <div className="h-4 bg-white/20 rounded w-1/2"></div>
-                <div className="h-4 bg-white/25 rounded w-2/3"></div>
-                <div className="mt-6 space-y-3">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-                    <div className="h-3 bg-white/30 rounded flex-1"></div>
+            <div className="relative bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20 shadow-2xl">
+              {/* Header Section */}
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                    <div className="w-4 h-4 bg-white/60 rounded"></div>
                   </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
-                    <div className="h-3 bg-white/30 rounded flex-1"></div>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-3 h-3 bg-purple-400 rounded-full"></div>
-                    <div className="h-3 bg-white/30 rounded flex-1"></div>
-                  </div>
+                  <div className="h-4 bg-white/40 rounded w-24"></div>
+                </div>
+                <div className="flex space-x-2">
+                  <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                  <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                  <div className="w-3 h-3 bg-red-400 rounded-full"></div>
                 </div>
               </div>
+
+              {/* Main Content */}
+              <div className="space-y-4 mb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                  <div className="h-3 bg-white/30 rounded flex-1"></div>
+                  <div className="h-3 bg-green-400/60 rounded w-16"></div>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                  <div className="h-3 bg-white/30 rounded flex-1"></div>
+                  <div className="h-3 bg-blue-400/60 rounded w-20"></div>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                  <div className="h-3 bg-white/30 rounded flex-1"></div>
+                  <div className="h-3 bg-purple-400/60 rounded w-12"></div>
+                </div>
+              </div>
+
+              {/* Stats Section */}
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="text-center">
+                  <div className="h-2 bg-white/20 rounded mb-2"></div>
+                  <div className="text-xs text-white/60">Active</div>
+                </div>
+                <div className="text-center">
+                  <div className="h-2 bg-green-400/60 rounded mb-2"></div>
+                  <div className="text-xs text-white/60">Complete</div>
+                </div>
+                <div className="text-center">
+                  <div className="h-2 bg-blue-400/60 rounded mb-2"></div>
+                  <div className="text-xs text-white/60">Pending</div>
+                </div>
+              </div>
+
+              {/* Bottom Action */}
+              <div className="flex items-center justify-between">
+                <div className="flex space-x-2">
+                  <div className="w-6 h-6 bg-white/20 rounded-full"></div>
+                  <div className="w-6 h-6 bg-white/20 rounded-full"></div>
+                  <div className="w-6 h-6 bg-white/20 rounded-full"></div>
+                </div>
+                <div className="h-8 bg-white/20 rounded-lg w-20 flex items-center justify-center">
+                  <div className="w-3 h-3 bg-white/60 rounded"></div>
+                </div>
+              </div>
+
+              {/* Floating Elements */}
+              <div className="absolute -top-2 -right-2 w-4 h-4 bg-green-400 rounded-full animate-pulse"></div>
+              <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-blue-400 rounded-full opacity-60"></div>
             </div>
+            
+            {/* Background Glow */}
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl blur-xl -z-10 transform scale-110"></div>
           </div>
         </div>
       </div>
