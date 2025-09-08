@@ -33,6 +33,7 @@ import AdminRoute from "./components/AdminRoute";
 import SavedJobs from "./pages/SavedJobs";
 import Security from "./pages/Security";
 import ServerMap from "./pages/ServerMap";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -64,6 +65,7 @@ function App() {
                 <Route path="/saved-jobs" element={<SavedJobs />} />
                 <Route path="/security" element={<Security />} />
                 <Route path="/servers" element={<ServerMap />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/checkout/success" element={<CheckoutSuccess />} />
                 
