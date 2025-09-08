@@ -5,33 +5,33 @@
 
 @layer base {
   :root {
-    --background: 248 250 252; /* #f8fafc - Light gray background */
-    --foreground: 31 41 55; /* #1f2937 - Dark gray text */
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
-    --card-foreground: 31 41 55; /* #1f2937 */
+    --card-foreground: 222.2 84% 4.9%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 31 41 55; 
+    --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 37 99% 60%; /* #2563eb - Strong blue */
-    --primary-foreground: 248 250 252; /* White text on blue */
+    --primary: 24.6 95% 53.1%;
+    --primary-foreground: 210 40% 98%;
 
-    --secondary: 248 250 252; /* #f8fafc - Light background */
-    --secondary-foreground: 31 41 55; /* Dark text */
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
 
-    --muted: 241 245 249; /* #f1f5f9 - Slightly darker than bg */
-    --muted-foreground: 100 116 139; /* #64748b - Gray text */
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 186 100% 47%; /* #0891b2 - Deep cyan accent */
-    --accent-foreground: 248 250 252; /* White text on accent */
+    --accent: 24.6 95% 95.1%;
+    --accent-foreground: 24.6 95% 11.2%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 248 250 252;
+    --destructive-foreground: 210 40% 98%;
 
-    --border: 226 232 240; /* #e2e8f0 - Light gray border */
-    --input: 226 232 240; /* #e2e8f0 */
-    --ring: 37 99% 60%; /* Primary blue for focus rings */
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 24.6 95% 53.1%;
 
     --radius: 0.5rem;
 
@@ -46,25 +46,25 @@
   }
 
   .dark {
-    --background: 15 23 42; /* #0f172a - Dark navy */
-    --foreground: 248 250 252; /* Light text */
-    --card: 30 41 59; /* #1e293b - Dark card */
-    --card-foreground: 248 250 252;
-    --popover: 30 41 59;
-    --popover-foreground: 248 250 252;
-    --primary: 37 99% 60%; /* Same blue primary */
-    --primary-foreground: 248 250 252;
-    --secondary: 51 65 85; /* #334155 - Dark secondary */
-    --secondary-foreground: 248 250 252;
-    --muted: 51 65 85;
-    --muted-foreground: 148 163 184; /* #94a3b8 - Light gray */
-    --accent: 186 100% 47%; /* Same cyan accent */
-    --accent-foreground: 248 250 252;
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 24.6 95% 53.1%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 248 250 252;
-    --border: 51 65 85; /* #334155 */
-    --input: 51 65 85;
-    --ring: 37 99% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 24.6 95% 53.1%;
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 24.6 95% 53.1%;
@@ -131,24 +131,11 @@ html {
   outline-offset: 2px;
 }
 
-/* Professional gradients and utilities */
-.bg-primary-gradient {
-  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+/* Custom orange gradient backgrounds */
+.bg-orange-gradient {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
 }
 
-.bg-secondary-gradient {
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-}
-
-.bg-accent-gradient {
-  background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
-}
-
-/* Professional shadows */
-.shadow-professional {
-  box-shadow: 0 4px 12px 0 rgba(15, 23, 42, 0.08);
-}
-
-.shadow-professional-lg {
-  box-shadow: 0 12px 32px 0 rgba(15, 23, 42, 0.12);
+.bg-orange-gradient-light {
+  background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);
 }
